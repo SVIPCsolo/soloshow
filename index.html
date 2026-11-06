@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0a0b10">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>SoloShow Phone</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -157,10 +160,10 @@ body{
   font-size:13px;color:#8a91a6;margin-top:4px;letter-spacing:1px;
 }
 
-/* 图标网格 */
+/* 图标网格（垂直居中于屏幕中部） */
 .apps{
   display:grid;grid-template-columns:repeat(4,1fr);gap:22px 10px;
-  padding:0 4px;margin-top:auto;
+  padding:0 4px;margin:auto 0;
 }
 .app{
   display:flex;flex-direction:column;align-items:center;gap:8px;
@@ -577,6 +580,25 @@ body{
 .life-choice{padding:13px 16px;border-radius:13px;border:1px solid rgba(255,209,102,.25);background:rgba(255,209,102,.06);color:#e8eaf2;font-size:13px;text-align:left;cursor:pointer;transition:transform .08s,background .15s;line-height:1.6}
 .life-choice:active{transform:scale(.97);background:rgba(255,209,102,.15)}
 .life-choice.primary{background:linear-gradient(135deg,#ffd166,#ffb340);color:#231a05;font-weight:700;text-align:center;border:none;letter-spacing:2px}
+.life-choice.disabled{opacity:.35;filter:grayscale(.5);pointer-events:none}
+.life-step{flex:none;width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,209,102,.3);background:rgba(255,209,102,.08);color:#ffd166;font-size:15px;cursor:pointer;line-height:1;padding:0}
+.life-step:active{transform:scale(.9)}
+
+/* ================= AI五子棋 ================= */
+#gomokuScreen{background:linear-gradient(180deg,#1c4630,#0f2a1a)}
+#gomokuScreen .setting-title{color:#e8c884}
+.gmk-wrap{padding:12px 16px 20px}
+.gmk-board{border-radius:16px;background:linear-gradient(145deg,#eecb8a,#dfb873);box-shadow:inset 0 2px 10px rgba(90,60,20,.35),0 10px 30px rgba(0,0,0,.45);overflow:hidden}
+.gmk-board canvas{display:block;width:100%;touch-action:manipulation;cursor:pointer}
+.gmk-bar{margin-top:14px;background:linear-gradient(180deg,#4a3524,#382818);border-radius:20px;padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 8px 20px rgba(0,0,0,.35)}
+.gmk-diff{display:flex;gap:8px}
+.gmk-pill{flex:1;padding:9px 0;border-radius:99px;border:none;background:rgba(255,255,255,.07);color:#e8c884;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:1px}
+.gmk-pill.on{background:linear-gradient(135deg,#ffb340,#ff9a1f);color:#3a2208;box-shadow:0 0 12px rgba(255,154,31,.45)}
+.gmk-row{display:flex;align-items:center;gap:10px;margin-top:12px}
+.gmk-status{flex:1;min-width:0;padding:10px 14px;border-radius:99px;background:rgba(0,0,0,.3);color:#e8c884;font-size:12px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gmk-start{padding:10px 20px;border-radius:99px;border:none;background:linear-gradient(135deg,#3ecf6e,#23a24c);color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:2px;box-shadow:0 4px 14px rgba(35,162,76,.4);white-space:nowrap}
+.gmk-restart{width:42px;height:42px;flex:none;border-radius:50%;border:none;background:linear-gradient(145deg,#6b4a2c,#523620);color:#e8c884;font-size:18px;cursor:pointer}
+.gmk-cap{text-align:center;color:rgba(232,200,132,.55);font-size:11px;letter-spacing:3px;margin-top:14px}
 
 /* ================= 创始人页面 ================= */
 .founder-hero{
@@ -718,6 +740,13 @@ body{
             <span style="font-size:30px;filter:drop-shadow(0 0 6px rgba(192,132,252,.6))">🎭</span>
           </div>
           <div class="app-label">人生模拟器</div>
+        </div>
+
+        <div class="app" onclick="openGomoku()">
+          <div class="app-icon">
+            <span style="font-size:20px;letter-spacing:-5px;margin-right:-5px">⚫⚪</span>
+          </div>
+          <div class="app-label">五子棋</div>
         </div>
       </div>
 
@@ -1107,6 +1136,32 @@ body{
       </div>
     </div>
 
+    <!-- ========== AI五子棋 ========== -->
+    <div class="level2" id="gomokuScreen" style="z-index:44">
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeGomoku()" aria-label="返回">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">AI 五子棋</div>
+      </div>
+      <div class="gmk-wrap">
+        <div class="gmk-board"><canvas id="gmkCanvas" onclick="gmkTap(event)"></canvas></div>
+        <div class="gmk-bar">
+          <div class="gmk-diff">
+            <button class="gmk-pill" data-d="0" onclick="gmkDiff(0)">🍃 简单</button>
+            <button class="gmk-pill on" data-d="1" onclick="gmkDiff(1)">⚖️ 普通</button>
+            <button class="gmk-pill" data-d="2" onclick="gmkDiff(2)">🔥 困难</button>
+          </div>
+          <div class="gmk-row">
+            <div class="gmk-status" id="gmkStatus">⚙ 请点击开始游戏</div>
+            <button class="gmk-start" id="gmkStartBtn" onclick="gmkStart()">开始游戏</button>
+            <button class="gmk-restart" onclick="gmkStart()" aria-label="重开">↻</button>
+          </div>
+        </div>
+        <div class="gmk-cap">金龙AI 深度博弈 · 步步为营</div>
+      </div>
+    </div>
+
     <!-- ========== 创始人 ========== -->
     <div class="level2" id="founderScreen" style="z-index:46">
       <div class="setting-header">
@@ -1323,6 +1378,7 @@ function closeRefresh(){
 function topLayer(){
   if(document.getElementById('userScreen').classList.contains('show')) return 'users';
   if(document.getElementById('founderScreen').classList.contains('show')) return 'founder';
+  if(document.getElementById('gomokuScreen').classList.contains('show')) return 'gomoku';
   if(document.getElementById('lifeScreen').classList.contains('show')) return 'life';
   if(document.getElementById('richScreen').classList.contains('show')) return 'rich';
   if(document.getElementById('snakeScreen').classList.contains('show')) return 'snake';
@@ -1336,6 +1392,7 @@ function backTop(){
   switch(topLayer()){
     case 'users': closeUsers();break;
     case 'founder': closeFounder();break;
+    case 'gomoku': closeGomoku();break;
     case 'life': closeLife();break;
     case 'rich': closeRich();break;
     case 'snake': closeSnake();break;
@@ -2026,14 +2083,23 @@ function lifeRole(age){
   return'知天命之年';
 }
 function lifeNew(){
-  life={age:6,stage:'intro',cur:-1,last:-1,follow:null,result:'',ending:null,attrs:{}};
-  LIFE_ATTRS.forEach(k=>life.attrs[k]=45+Math.floor(Math.random()*21));
+  life={age:6,stage:'alloc',cur:-1,last:-1,follow:null,result:'',ending:null,pool:100,attrs:{}};
+  LIFE_ATTRS.forEach(k=>life.attrs[k]=10); /* 每项打底10点，另有100点自由分配 */
   lifeSave(); lifeRender();
 }
 function openLife(){
   document.getElementById('lifeScreen').classList.add('show');
   if(!life){ try{ life=JSON.parse(localStorage.getItem(LIFE_KEY)); }catch(e){} }
-  if(!life) lifeNew(); else lifeRender();
+  if(!life||life.stage==='intro') lifeNew(); else lifeRender();
+}
+/* 自由加点：点数池 100，单项只受属性 0-100 范围限制 */
+function lifeAlloc(k,d){
+  if(!life||life.stage!=='alloc') return;
+  const cur=life.attrs[k];
+  if(d>0&&(life.pool<=0||cur>=100)) return;
+  if(d<0&&cur<=0) return;
+  life.attrs[k]+=d; life.pool-=d;
+  lifeSave(); lifeRender();
 }
 function closeLife(){
   document.getElementById('lifeScreen').classList.remove('show');
@@ -2081,7 +2147,8 @@ function lifeChoose(i){
 }
 function lifeContinue(){
   if(!life) return;
-  if(life.stage==='intro'){
+  if(life.stage==='intro'||life.stage==='alloc'){
+    if(life.stage==='alloc'&&life.pool>0) return; /* 点数未分配完不能开始 */
     life.cur=lifePickEvent(); life.last=life.cur; life.stage='event';
     lifeSave(); lifeRender(); return;
   }
@@ -2098,15 +2165,20 @@ function lifeContinue(){
 const LIFE_NUMS=['①','②','③','④'];
 function lifeRender(){
   document.getElementById('lifeAge').textContent=life.age+' 岁';
+  const alloc=life.stage==='alloc';
   document.getElementById('lifeAttrs').innerHTML=LIFE_ATTRS.map(k=>
     `<div class="life-attr"><div class="life-attr-name">${k}</div>
+     ${alloc?`<button class="life-step" onclick="lifeAlloc('${k}',-1)">−</button>`:''}
      <div class="life-attr-bar"><div class="life-attr-fill" style="width:${life.attrs[k]}%;background:${LIFE_COLORS[k]}"></div></div>
-     <div class="life-attr-num" style="color:${LIFE_COLORS[k]}">${life.attrs[k]}</div></div>`).join('');
+     <div class="life-attr-num" style="color:${LIFE_COLORS[k]}">${life.attrs[k]}</div>
+     ${alloc?`<button class="life-step" onclick="lifeAlloc('${k}',1)">＋</button>`:''}</div>`).join('');
   const card=document.getElementById('lifeCard');
   const box=document.getElementById('lifeChoices');
-  if(life.stage==='intro'){
-    card.innerHTML=`<div class="life-role">出生 · 江南小城</div>小红，6 岁，出生在双职工家庭。今天是小学开学第一天，书包里装着崭新的铅笔盒。<br><br>人生漫漫，从此刻开始。`;
-    box.innerHTML=`<button class="life-choice primary" onclick="lifeContinue()">开始人生 →</button>`;
+  if(alloc){
+    card.innerHTML=`<div class="life-role">出生 · 江南小城</div>小红，6 岁，出生在双职工家庭。今天是小学开学第一天，书包里装着崭新的铅笔盒。<br><br>这一世的天赋由你决定——<b style="color:#ffd166">剩余可分配点数：${life.pool}</b>`;
+    box.innerHTML=life.pool>0
+      ?`<button class="life-choice primary disabled">先分配完所有点数</button>`
+      :`<button class="life-choice primary" onclick="lifeContinue()">开始人生 →</button>`;
     return;
   }
   if(life.stage==='event'){
