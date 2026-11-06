@@ -563,9 +563,10 @@ body{
 
 /* ================= 创始人页面 ================= */
 .founder-hero{
-  display:flex;flex-direction:column;align-items:center;
-  padding:26px 0 22px;position:relative;
+  display:flex;justify-content:center;align-items:flex-start;gap:38px;
+  padding:36px 0 22px;position:relative;
 }
+.founder-person{position:relative;display:flex;flex-direction:column;align-items:center}
 .founder-avatar{
   width:96px;height:96px;border-radius:30px;
   display:grid;place-items:center;font-size:52px;
@@ -579,8 +580,8 @@ body{
   50%{box-shadow:0 0 54px rgba(255,140,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
 }
 .founder-crown{
-  position:absolute;top:10px;
-  font-size:20px;transform:rotate(-14deg);
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%) rotate(-14deg);
+  font-size:20px;
   filter:drop-shadow(0 0 8px rgba(255,193,7,.6));
 }
 .founder-name{
@@ -594,6 +595,22 @@ body{
   font-size:10px;letter-spacing:3px;font-weight:700;
   color:#ffb066;background:rgba(255,140,0,.1);
   border:1px solid rgba(255,140,0,.3);
+}
+/* 网站管理员（恐龙） */
+.admin-avatar{
+  background:linear-gradient(145deg,#15251c,#0f1713);
+  border-color:rgba(74,222,128,.35);
+  box-shadow:0 0 34px rgba(74,222,128,.16),inset 0 1px 0 rgba(255,255,255,.08);
+  animation:none;
+}
+.admin-name{
+  font-size:19px;letter-spacing:2px;
+  background:linear-gradient(135deg,#a7f3c7,#4ade80);
+  -webkit-background-clip:text;background-clip:text;
+}
+.admin-badge{
+  color:#7ee2a8;background:rgba(74,222,128,.1);
+  border-color:rgba(74,222,128,.3);letter-spacing:2px;
 }
 .founder-quote{
   margin:20px 0 4px;padding:16px 18px;border-radius:16px;
@@ -1060,10 +1077,17 @@ body{
       </div>
       <div class="level2-content">
         <div class="founder-hero">
-          <div class="founder-crown">👑</div>
-          <div class="founder-avatar">👩‍💼</div>
-          <div class="founder-name">小 红</div>
-          <div class="founder-badge">★ 创始人 · FOUNDER</div>
+          <div class="founder-person">
+            <div class="founder-avatar admin-avatar">🦖</div>
+            <div class="founder-name admin-name">网站管理员</div>
+            <div class="founder-badge admin-badge">🛡 管理员 · ADMIN</div>
+          </div>
+          <div class="founder-person">
+            <div class="founder-crown">👑</div>
+            <div class="founder-avatar">👩‍💼</div>
+            <div class="founder-name">小 红</div>
+            <div class="founder-badge">★ 创始人 · FOUNDER</div>
+          </div>
         </div>
 
         <div class="group-title">创始人信息</div>
