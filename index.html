@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>世界首富模拟器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg-0:#05060d;--bg-1:#0a0d1a;--bg-2:#111628;
+  --accent:#00f0ff;--accent-2:#ff00c8;--accent-3:#ffcc00;
+  --text:#e6edf7;--text-dim:#8899b4;
+  --glass:rgba(20,28,50,0.55);--glass-border:rgba(0,240,255,0.25);
+  --glow:0 0 24px rgba(0,240,255,0.35);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg-0);color:var(--text);font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+body{background:radial-gradient(ellipse at top,#0d1228 0%,var(--bg-0) 55%,#02030a 100%);overflow:auto}
+
+/* ===== 顶部资产栏 ===== */
+.top-bar{
+  position:sticky;top:0;z-index:20;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:linear-gradient(180deg,rgba(5,6,13,0.92),rgba(5,6,13,0.72));
+  border-bottom:1px solid var(--glass-border);
+  padding:14px 18px 12px;
+}
+.top-bar .brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.top-bar .logo{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:grid;place-items:center;font-size:20px;font-weight:900;color:#0a0d1a;
+  box-shadow:var(--glow);
+}
+.top-bar h1{font-size:18px;letter-spacing:2px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.top-bar .slogan{font-size:11px;color:var(--text-dim);margin-top:1px;letter-spacing:1px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  padding:10px 14px;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,rgba(0,240,255,0.08),transparent 60%);
+}
+.stat-card .label{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
+.stat-card .value{
+  font-family:'Courier New',monospace;font-weight:800;font-size:20px;
+  color:var(--accent);text-shadow:0 0 12px rgba(0,240,255,0.55);
+  margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.stat-card.income .value{color:#5dff9e;text-shadow:0 0 12px rgba(93,255,158,0.55)}
+.stat-card .unit{font-size:11px;color:var(--text-dim);margin-left:4px}
+
+/* ===== 主内容 ===== */
+.container{position:relative;z-index:5;max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+.section-title{
+  font-size:12px;letter-spacing:3px;color:var(--text-dim);
+  margin:10px 4px 12px;display:flex;align-items:center;gap:10px;
+}
+.section-title::before,.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--glass-border),transparent)}
+
+.grid{
+  display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+}
+.card{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:16px;
+  position:relative;overflow:hidden;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+  backdrop-filter:blur(8px);
+}
+.card:hover{transform:translateY(-3px);border-color:rgba(0,240,255,0.5);box-shadow:0 12px 40px rgba(0,240,255,0.15)}
+.card .icon{
+  font-size:36px;margin-bottom:10px;display:block;
+  filter:drop-shadow(0 0 10px rgba(0,240,255,0.4));
+}
+.card .name{font-size:15px;font-weight:700;margin-bottom:4px}
+.card .desc{font-size:11px;color:var(--text-dim);margin-bottom:12px;line-height:1.5}
+.card .price-row{
+  display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;
+}
+.card .price-label{font-size:10px;color:var(--text-dim);letter-spacing:1px}
+.card .price{
+  font-family:'Courier New',monospace;font-weight:800;font-size:17px;
+  color:var(--accent-3);text-shadow:0 0 10px rgba(255,204,0,0.35);
+}
+.card .owns{
+  font-size:11px;color:var(--accent);font-family:'Courier New',monospace;
+}
+.card .income-line{
+  font-size:11px;color:#5dff9e;margin-bottom:12px;
+}
+.buy-btn{
+  width:100%;padding:11px;border:none;border-radius:10px;cursor:pointer;
+  font-size:13px;font-weight:700;letter-spacing:1.5px;
+  background:linear-gradient(135deg,#00f0ff,#0088ff);
+  color:#0a0d1a;position:relative;overflow:hidden;
+  transition:transform .1s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(0,240,255,0.35);
+}
+.buy-btn:hover:not(:disabled){transform:scale(1.02);box-shadow:0 6px 28px rgba(0,240,255,0.55)}
+.buy-btn:active:not(:disabled){transform:scale(0.98)}
+.buy-btn:disabled{
+  background:linear-gradient(135deg,#3a4560,#22293d);color:#5a6580;
+  cursor:not-allowed;box-shadow:none;
+}
+.buy-btn::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
+  transition:left .5s;
+}
+.buy-btn:hover:not(:disabled)::after{left:100%}
+
+/* ===== 弹窗 ===== */
+.modal-mask{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+  display:none;place-items:center;
+  animation:fadeIn .25s;
+}
+.modal-mask.show{display:grid}
+.modal{
+  background:linear-gradient(145deg,#111a32,#0a0d1a);
+  border:1px solid var(--accent);
+  border-radius:20px;padding:28px 32px;
+  max-width:340px;width:88%;text-align:center;
+  box-shadow:0 0 60px rgba(0,240,255,0.4),inset 0 0 40px rgba(0,240,255,0.08);
+  animation:popIn .35s cubic-bezier(.2,1.4,.4,1);
+  position:relative;overflow:hidden;
+}
+.modal::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 0deg,transparent,rgba(0,240,255,0.08),transparent);
+  animation:spin 6s linear infinite;
+}
+.modal > *{position:relative;z-index:1}
+.modal .check{
+  width:70px;height:70px;border-radius:50%;margin:0 auto 14px;
+  background:linear-gradient(135deg,#00f0ff,#00ff88);
+  display:grid;place-items:center;font-size:36px;color:#0a0d1a;font-weight:900;
+  box-shadow:0 0 30px rgba(0,255,136,0.6);
+  animation:checkPop .5s cubic-bezier(.2,1.6,.4,1);
+}
+.modal h2{font-size:20px;margin-bottom:6px;background:linear-gradient(90deg,var(--accent),#5dff9e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.modal p{font-size:13px;color:var(--text-dim);margin-bottom:4px}
+.modal .highlight{color:var(--accent-3);font-weight:700;font-family:'Courier New',monospace;margin:8px 0 18px;font-size:16px;text-shadow:0 0 10px rgba(255,204,0,0.5)}
+.modal button{
+  padding:10px 28px;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#0a0d1a;font-size:13px;font-weight:700;letter-spacing:1.5px;
+  box-shadow:0 4px 20px rgba(0,240,255,0.4);
+}
+
+/* ===== 浮动金币特效 ===== */
+.float-coin{
+  position:fixed;pointer-events:none;z-index:50;
+  font-family:'Courier New',monospace;font-weight:900;
+  color:#5dff9e;text-shadow:0 0 12px rgba(93,255,158,0.7);
+  animation:floatUp 1.2s ease-out forwards;
+}
+
+/* ===== 底部装饰 ===== */
+.footer-note{
+  text-align:center;font-size:10px;color:var(--text-dim);
+  margin-top:30px;letter-spacing:2px;opacity:.5;
+}
+
+/* ===== 动画 ===== */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes checkPop{
+  0%{transform:scale(0) rotate(-180deg);opacity:0}
+  60%{transform:scale(1.25) rotate(10deg);opacity:1}
+  100%{transform:scale(1) rotate(0)}
+}
+@keyframes floatUp{
+  0%{transform:translateY(0);opacity:1}
+  100%{transform:translateY(-80px);opacity:0}
+}
+
+/* 数字跳动 */
+@keyframes numBump{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.18);color:#5dff9e}
+  100%{transform:scale(1)}
+}
+.num-bump{animation:numBump .25s ease}
+
+/* ===== 响应式 ===== */
+@media(max-width:480px){
+  .top-bar{padding:12px 12px 10px}
+  .top-bar h1{font-size:16px}
+  .stat-card .value{font-size:17px}
+  .grid{grid-template-columns:1fr;gap:12px}
+  .card{padding:14px;border-radius:14px}
+}
+@media(min-width:768px){
+  .stats{grid-template-columns:1fr 1fr auto;grid-template-rows:auto}
+}
+@media(min-width:1024px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent-2));border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- 粒子背景 -->
+<canvas id="particles"></canvas>
+
+<!-- 顶部资产栏 -->
+<header class="top-bar">
+  <div class="brand">
+    <div class="logo">¥</div>
+    <div>
+      <h1>世界首富模拟器</h1>
+      <div class="slogan">WORLD'S RICHEST SIMULATOR</div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">现金</div>
+      <div class="value" id="cashDisplay">¥ 0</div>
+    </div>
+    <div class="stat-card income">
+      <div class="label">每秒收益</div>
+      <div class="value" id="incomeDisplay">+ ¥ 0</div>
+    </div>
+  </div>
+</header>
+
+<!-- 主内容 -->
+<div class="container">
+  <div class="section-title">房产帝国 · REAL ESTATE</div>
+  <div class="grid" id="grid-realestate"></div>
+
+  <div class="section-title">豪车飞机 · VEHICLES</div>
+  <div class="grid" id="grid-vehicles"></div>
+
+  <div class="section-title">奢侈品 · LUXURY</div>
+  <div class="grid" id="grid-luxury"></div>
+
+  <div class="section-title">公司股权 · COMPANY STOCKS</div>
+  <div class="grid" id="grid-companies"></div>
+
+  <div class="footer-note">· 单机离线运行 · 数据保存在本地 ·</div>
+</div>
+
+<!-- 成功弹窗 -->
+<div class="modal-mask" id="modal">
+  <div class="modal">
+    <div class="check">✓</div>
+    <h2 id="modalTitle">购买成功</h2>
+    <p id="modalItem">—</p>
+    <div class="highlight" id="modalDetail">—</div>
+    <button onclick="closeModal()">继 续 壕</button>
+  </div>
+</div>
+
+<script>
+/* ================= 粒子背景 ================= */
+(function initParticles(){
+  const cv=document.getElementById('particles'),ctx=cv.getContext('2d');
+  let W,H,particles=[];
+  function resize(){
+    W=cv.width=innerWidth;H=cv.height=innerHeight;
+    const n=Math.min(90,Math.floor((W*H)/16000));
+    particles=Array.from({length:n},()=>({
+      x:Math.random()*W,y:Math.random()*H,
+      vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+      r:Math.random()*1.8+.4,
+      c:Math.random()<.5?'#00f0ff':'#ff00c8'
+    }));
+  }
+  resize();addEventListener('resize',resize);
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of particles){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0) p.x=W;if(p.x>W) p.x=0;
+      if(p.y<0) p.y=H;if(p.y>H) p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);
+      ctx.fillStyle=p.c;ctx.globalAlpha=.5;ctx.fill();
+      ctx.shadowColor=p.c;ctx.shadowBlur=10;ctx.fill();
+      ctx.shadowBlur=0;
+    }
+    // 连线
+    ctx.globalAlpha=.12;
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const a=particles[i],b=particles[j];
+        const dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy;
+        if(d2<140*140){
+          ctx.beginPath();
+          ctx.strokeStyle=a.c;
+          ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha=1;
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ================= 数字格式化 ================= */
+function formatMoney(n){
+  const abs=Math.abs(n);
+  let unit='';
+  let val=n;
+  if(abs>=1e24){val=n/1e24;unit='尧'}
+  else if(abs>=1e20){val=n/1e20;unit='垓'}
+  else if(abs>=1e16){val=n/1e16;unit='京'}
+  else if(abs>=1e12){val=n/1e12;unit='兆'}
+  else if(abs>=1e8){val=n/1e8;unit='亿'}
+  else if(abs>=1e4){val=n/1e4;unit='万'}
+  if(unit){
+    return '¥ '+val.toFixed(2)+' '+unit;
+  }
+  return '¥ '+Math.round(n).toLocaleString();
+}
+function formatInt(n){
+  const abs=Math.abs(n);
+  let unit='';let val=n;
+  if(abs>=1e16){val=n/1e16;unit='京'}
+  else if(abs>=1e12){val=n/1e12;unit='兆'}
+  else if(abs>=1e8){val=n/1e8;unit='亿'}
+  else if(abs>=1e4){val=n/1e4;unit='万'}
+  if(unit) return val.toFixed(2)+unit;
+  return Math.round(n).toString();
+}
+
+/* ================= 物品数据 ================= */
+/* 价格公式: basePrice * (1.15 ^ owned)  —— 指数增长 */
+const CATEGORIES={
+  realestate:[
+    {id:'house1',name:'北京三环一居室',desc:'60平米学区房',icon:'🏠',price:8e6,income:120},
+    {id:'house2',name:'上海江景豪宅',desc:'300平米一线江景',icon:'🏢',price:8e7,income:1100},
+    {id:'house3',name:'深圳湾超级总部',desc:'整层写字楼',icon:'🏙️',price:5e8,income:9500},
+    {id:'house4',name:'马尔代夫度假岛',desc:'私人岛屿+别墅群',icon:'🏝️',price:1.2e10,income:220000},
+    {id:'house5',name:'纽约中央公园顶层公寓',desc:'360°全景顶层',icon:'🌆',price:4e9,income:78000},
+    {id:'house6',name:'阿尔卑斯滑雪庄园',desc:'瑞士雪山庄园',icon:'🏔️',price:2.5e9,income:48000},
+  ],
+  vehicles:[
+    {id:'car1',name:'特斯拉 Model S',desc:'电动车标杆',icon:'🚗',price:8e5,income:15},
+    {id:'car2',name:'劳斯莱斯幻影',desc:'移动的艺术品',icon:'🚙',price:6e6,income:140},
+    {id:'car3',name:'布加迪 Chiron',desc:'速度之王',icon:'🏎️',price:2.8e7,income:620},
+    {id:'car4',name:'湾流 G650ER',desc:'私人飞机天花板',icon:'✈️',price:7.5e8,income:18000},
+    {id:'car5',name:'空客 ACJ319 商务机',desc:'空中别墅',icon:'🛩️',price:4.2e9,income:98000},
+    {id:'car6',name:'超级游艇 Eclipse',desc:'163米海上行宫',icon:'🛥️',price:1.6e10,income:320000},
+  ],
+  luxury:[
+    {id:'lux1',name:'百达翡丽超级复杂功能',desc:'全球限量10只',icon:'⌚',price:2.5e6,income:50},
+    {id:'lux2',name:'爱马仕喜马拉雅铂金包',desc:'鳄鱼皮+钻石',icon:'👜',price:3.8e6,income:80},
+    {id:'lux3',name:'粉钻项链',desc:'18克拉天然粉钻',icon:'💎',price:4.5e7,income:950},
+    {id:'lux4',name:'梵高《星空》真迹',desc:'博物馆级藏品',icon:'🖼️',price:5.2e9,income:120000},
+    {id:'lux5',name:'1962年法拉利250 GTO',desc:'史上最贵汽车',icon:'🏁',price:7e9,income:160000},
+    {id:'lux6',name:'月球陨石收藏',desc:'来自太空的馈赠',icon:'🌙',price:1.8e9,income:42000},
+  ],
+  companies:[
+    {id:'co1',name:'本地便利店',desc:'小区门口的生意',icon:'🏪',price:1.2e6,income:28},
+    {id:'co2',name:'网红餐饮连锁',desc:'抖音爆款品牌',icon:'🍜',price:2.5e7,income:580},
+    {id:'co3',name:'科技初创公司',desc:'AI赛道独角兽',icon:'💻',price:1.5e9,income:35000},
+    {id:'co4',name:'航空公司股份',desc:'全业务航司 5%',icon:'🛫',price:8e9,income:190000},
+    {id:'co5',name:'新能源汽车集团',desc:'新势力龙头',icon:'🔋',price:2.5e10,income:580000},
+    {id:'co6',name:'SpaceX 股权',desc:'马斯克星辰大海',icon:'🚀',price:6e10,income:1400000},
+  ],
+};
+
+const ALL_ITEMS=Object.values(CATEGORIES).flat();
+
+/* ================= 游戏状态 ================= */
+const SAVE_KEY='richest-sim-save-v1';
+let state={
+  cash:1e15,  // 初始 1000 万亿（1京）
+  owned:{},
+  lastTick:Date.now(),
+};
+for(const it of ALL_ITEMS) state.owned[it.id]=0;
+
+function getPrice(item){
+  const base=item.price;
+  const owned=state.owned[item.id]||0;
+  return Math.floor(base*Math.pow(1.15,owned));
+}
+function getIncome(){
+  let total=0;
+  for(const it of ALL_ITEMS){
+    total+=(state.owned[it.id]||0)*it.income;
+  }
+  return total;
+}
+function getTotalAssets(){
+  let tot=state.cash;
+  for(const it of ALL_ITEMS){
+    const n=state.owned[it.id]||0;
+    // 已购资产按当前估值 80% 计入
+    if(n>0){
+      // 近似估算
+      const base=itemPriceApprox(it,n);
+      tot+=base*0.85*n;
+    }
+  }
+  return tot;
+}
+function itemPriceApprox(item,n){
+  // 取中间价近似
+  return item.price*Math.pow(1.15,n*0.5);
+}
+
+/* ================= 渲染 ================= */
+function renderGrid(catKey,containerId){
+  const c=document.getElementById(containerId);
+  c.innerHTML='';
+  for(const it of CATEGORIES[catKey]){
+    const owned=state.owned[it.id]||0;
+    const price=getPrice(it);
+    const canBuy=state.cash>=price;
+    const income=owned*it.income;
+
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <span class="icon">${it.icon}</span>
+      <div class="name">${it.name}</div>
+      <div class="desc">${it.desc}</div>
+      <div class="price-row">
+        <div>
+          <div class="price-label">当前价格</div>
+          <div class="price">${formatMoney(price)}</div>
+        </div>
+        <div class="owns">已持有 ${owned}</div>
+      </div>
+      <div class="income-line">+${formatMoney(it.income)} /秒  每单位${owned>0?`· 当前 +${formatMoney(income)} /秒`:''}</div>
+      <button class="buy-btn" data-id="${it.id}" ${canBuy?'':'disabled'}>
+        ${canBuy?'立 即 购 买':'余 额 不 足'}
+      </button>
+    `;
+    const btn=card.querySelector('.buy-btn');
+    btn.addEventListener('click',()=>tryBuy(it.id,card));
+    c.appendChild(card);
+  }
+}
+function renderAll(){
+  for(const k of Object.keys(CATEGORIES)) renderGrid(k,'grid-'+k);
+}
+function updateDisplays(){
+  document.getElementById('cashDisplay').textContent=formatMoney(state.cash);
+  document.getElementById('incomeDisplay').textContent='+ '+formatMoney(getIncome())+' /秒';
+}
+
+/* ================= 购买 ================= */
+function tryBuy(itemId,cardEl){
+  const it=ALL_ITEMS.find(i=>i.id===itemId);
+  const price=getPrice(it);
+  if(state.cash<price) return;
+  state.cash-=price;
+  state.owned[itemId]=(state.owned[itemId]||0)+1;
+
+  // 浮动金币
+  const rect=cardEl.getBoundingClientRect();
+  spawnFloatCoin(rect.left+rect.width/2,rect.top+30,price);
+
+  // 数字跳动
+  const cashEl=document.getElementById('cashDisplay');
+  cashEl.classList.remove('num-bump');void cashEl.offsetWidth;cashEl.classList.add('num-bump');
+
+  renderAll();
+  updateDisplays();
+  save();
+
+  // 弹窗
+  showModal(it,price);
+}
+
+function spawnFloatCoin(x,y,amount){
+  const el=document.createElement('div');
+  el.className='float-coin';
+  el.textContent='-'+formatMoney(amount);
+  el.style.left=x+'px';el.style.top=y+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1200);
+}
+
+function showModal(item,price){
+  document.getElementById('modalTitle').textContent='🎉 购买成功';
+  document.getElementById('modalItem').textContent=item.icon+' '+item.name;
+  document.getElementById('modalDetail').textContent='花费 '+formatMoney(price);
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('show');
+}
+// 点击遮罩关闭
+document.getElementById('modal').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+/* ================= 主循环 ================= */
+setInterval(function(){
+  const now=Date.now();
+  const dt=(now-state.lastTick)/1000;
+  state.lastTick=now;
+
+  const inc=getIncome()*dt;
+  state.cash+=inc;
+
+  // 每 1 秒更新显示和卡片（余额变化影响按钮可用状态）
+  updateDisplays();
+},100);
+
+// 每秒刷新所有卡片（价格变化 / 余额变化）
+setInterval(function(){
+  renderAll();
+  save();
+},1000);
+
+/* ================= 存档 ================= */
+function save(){
+  try{ localStorage.setItem(SAVE_KEY,JSON.stringify(state)); }catch(e){}
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    const s=JSON.parse(raw);
+    state.cash=s.cash||state.cash;
+    state.owned=s.owned||{};
+    for(const it of ALL_ITEMS) if(state.owned[it.id]==null) state.owned[it.id]=0;
+  }catch(e){}
+}
+load();state.lastTick=Date.now();
+
+/* ================= 启动 ================= */
+renderAll();
+updateDisplays();
+
+// 欢迎弹窗（仅首次）
+if(!localStorage.getItem(SAVE_KEY+'-welcome')){
+  setTimeout(()=>{
+    document.getElementById('modalTitle').textContent='💰 欢迎来到首富世界';
+    document.getElementById('modalItem').textContent='你拥有 1 京 启动资金';
+    document.getElementById('modalDetail').textContent='去买买买吧！越买越贵，但也越买越赚！';
+    document.getElementById('modal').classList.add('show');
+    localStorage.setItem(SAVE_KEY+'-welcome','1');
+  },400);
+}
+</script>
+</body>
+</html>
