@@ -508,19 +508,30 @@ body{
   transition:transform .1s;
 }
 .snake-ov-btn:active{transform:scale(.95)}
-.snake-dpad{
-  display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(3,42px);
-  gap:7px;margin:12px 0 6px;user-select:none;-webkit-user-select:none;
+.snake-controls{
+  display:flex;align-items:center;justify-content:center;gap:26px;
+  margin:10px 0 8px;user-select:none;-webkit-user-select:none;
 }
-.dpad-btn{
-  border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-  color:#c4c8d6;font-size:14px;display:grid;place-items:center;cursor:pointer;
-  transition:transform .08s,background .15s;-webkit-tap-highlight-color:transparent;
+.joystick{
+  width:118px;height:118px;border-radius:50%;position:relative;touch-action:none;
+  background:radial-gradient(circle at 50% 42%,rgba(74,222,128,.1),rgba(255,255,255,.03));
+  border:1px solid rgba(74,222,128,.32);
+  box-shadow:inset 0 0 26px rgba(0,0,0,.5),0 0 24px rgba(74,222,128,.08);
 }
-.dpad-btn:active{
-  transform:scale(.9);background:rgba(74,222,128,.18);color:#4ade80;border-color:rgba(74,222,128,.4);
+.joy-knob{
+  position:absolute;left:50%;top:50%;width:52px;height:52px;border-radius:50%;
+  transform:translate(-50%,-50%);pointer-events:none;
+  background:radial-gradient(circle at 38% 32%,#5ef39a,#22b45e 72%);
+  border:1px solid rgba(74,222,128,.55);
+  box-shadow:0 4px 16px rgba(74,222,128,.35),inset 0 -5px 9px rgba(0,0,0,.28);
 }
-.dpad-btn.mid{font-size:11px;letter-spacing:1px;color:#4ade80;background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.2)}
+.snake-pause-btn{
+  width:62px;height:62px;border-radius:50%;cursor:pointer;
+  font-size:11px;letter-spacing:1px;color:#4ade80;
+  background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);
+  -webkit-tap-highlight-color:transparent;transition:transform .08s,background .15s;
+}
+.snake-pause-btn:active{transform:scale(.9);background:rgba(74,222,128,.18)}
 
 /* ================= 创始人页面 ================= */
 .founder-hero{
@@ -972,20 +983,13 @@ body{
           <div class="snake-overlay" id="snakeOverlay">
             <div class="snake-ov-title" id="snakeOvTitle">SOLO SNAKE</div>
             <div class="snake-ov-score" id="snakeOvScore" style="display:none"></div>
-            <div class="snake-ov-sub" id="snakeOvSub">滑动屏幕或方向键控制<br>吃掉能量点得分 · 撞墙或咬到自己结束</div>
+            <div class="snake-ov-sub" id="snakeOvSub">推动摇杆任意转向<br>吃掉能量点得分 · 撞墙或咬到自己结束</div>
             <button class="snake-ov-btn" id="snakeOvBtn" onclick="snakeBtn()">开始游戏</button>
           </div>
         </div>
-        <div class="snake-dpad" id="snakeDpad">
-          <div></div>
-          <button class="dpad-btn" data-dir="up">▲</button>
-          <div></div>
-          <button class="dpad-btn" data-dir="left">◀</button>
-          <button class="dpad-btn mid" id="snakePauseBtn" onclick="snakeTogglePause(event)">暂停</button>
-          <button class="dpad-btn" data-dir="right">▶</button>
-          <div></div>
-          <button class="dpad-btn" data-dir="down">▼</button>
-          <div></div>
+        <div class="snake-controls">
+          <div class="joystick" id="snakeJoy"><div class="joy-knob" id="snakeJoyKnob"></div></div>
+          <button class="snake-pause-btn" id="snakePauseBtn" onclick="snakeTogglePause(event)">暂停</button>
         </div>
       </div>
     </div>
@@ -1254,12 +1258,19 @@ function closeFounder(){
   document.getElementById('founderScreen').classList.remove('show');
 }
 
-/* ========== 贪吃蛇游戏 ========== */
+/* ========== 贪吃蛇游戏（360° 摇杆版） ========== */
 const SNAKE_KEY='soloshow-snake-hi';
-const S_COLS=14, S_ROWS=20, S_CELL=20;
-let snake=null, snakeDir='right', snakeNextDir='right';
-let snakeFood=null, snakeScore=0, snakeTimer=null;
+const S_W=280, S_H=400;               /* 画布逻辑尺寸 */
+const S_GAP=6;                        /* 蛇身节点间距(px) */
+const S_HEAD_R=8, S_BODY_R=6.5, S_FOOD_R=6;
+const S_SPEED0=100, S_SPEED_MAX=230;  /* px/s */
+const S_TURN=5.2;                     /* 最大转向速度(rad/s) */
+let snake=null;                       /* 节点数组，头在 [0] */
+let snakeAngle=0, snakeTargetAngle=0;
+let snakeLen=0;                       /* 目标节点数（随吃食增长） */
+let snakeFood=null, snakeScore=0;
 let snakeState='idle'; /* idle | playing | paused | over */
+let snakeRaf=null, snakeLastTs=0;
 let snakeHi=parseInt(localStorage.getItem(SNAKE_KEY)||'0');
 
 function openSnake(){
@@ -1278,7 +1289,7 @@ function snakeFit(){
   const c=document.getElementById('snakeCanvas');
   const sw=stage.clientWidth, sh=stage.clientHeight;
   if(!sw||!sh) return;
-  const ratio=S_COLS/S_ROWS;
+  const ratio=S_W/S_H;
   let w=sw, h=w/ratio;
   if(h>sh){ h=sh; w=h*ratio; }
   c.style.width=w+'px';
@@ -1303,28 +1314,30 @@ function snakeBtn(){
 }
 
 function snakeStart(){
-  const cy=Math.floor(S_ROWS/2);
-  snake=[{x:5,y:cy},{x:4,y:cy},{x:3,y:cy}];
-  snakeDir='right'; snakeNextDir='right';
+  const cx=S_W/2, cy=S_H/2;
+  snake=[];
+  for(let i=0;i<16;i++) snake.push({x:cx-i*S_GAP,y:cy});
+  snakeLen=snake.length;
+  snakeAngle=0; snakeTargetAngle=0;
   snakeScore=0;
   document.getElementById('snakeScore').textContent='0';
   snakeDropFood();
   snakeState='playing';
   document.getElementById('snakePauseBtn').textContent='暂停';
   snakeHideOverlay();
-  snakeLoop();
+  snakeRun();
   snakeDraw();
 }
 
-function snakeLoop(){
-  clearInterval(snakeTimer);
-  const speed=Math.max(70,160-snakeScore*1.5);
-  snakeTimer=setInterval(snakeTick,speed);
+function snakeRun(){
+  cancelAnimationFrame(snakeRaf);
+  snakeLastTs=0;
+  snakeRaf=requestAnimationFrame(snakeFrame);
 }
 
 function snakePause(){
   if(snakeState!=='playing') return;
-  clearInterval(snakeTimer);
+  cancelAnimationFrame(snakeRaf);
   snakeState='paused';
   document.getElementById('snakePauseBtn').textContent='继续';
   snakeSetOverlay('已暂停','点击下方按钮继续','继续游戏');
@@ -1333,7 +1346,7 @@ function snakeResume(){
   snakeState='playing';
   document.getElementById('snakePauseBtn').textContent='暂停';
   snakeHideOverlay();
-  snakeLoop();
+  snakeRun();
 }
 function snakeTogglePause(e){
   if(e) e.stopPropagation();
@@ -1343,22 +1356,53 @@ function snakeTogglePause(e){
 
 function snakeDropFood(){
   while(true){
-    const f={x:Math.floor(Math.random()*S_COLS),y:Math.floor(Math.random()*S_ROWS)};
-    if(!snake.some(s=>s.x===f.x&&s.y===f.y)){ snakeFood=f; return; }
+    const f={x:20+Math.random()*(S_W-40),y:20+Math.random()*(S_H-40)};
+    if(!snake||!snake.some(s=>Math.hypot(s.x-f.x,s.y-f.y)<28)){ snakeFood=f; return; }
   }
 }
 
-function snakeTick(){
+/* 平滑转向：沿最短弧逼近目标角度 */
+function snakeSteer(dt){
+  let diff=snakeTargetAngle-snakeAngle;
+  while(diff>Math.PI) diff-=Math.PI*2;
+  while(diff<-Math.PI) diff+=Math.PI*2;
+  const max=S_TURN*dt;
+  snakeAngle+=Math.abs(diff)<=max?diff:Math.sign(diff)*max;
+}
+
+function snakeFrame(ts){
   if(snakeState!=='playing') return;
-  if(snakeNextDir!==snakeDir) snakeDir=snakeNextDir;
-  const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[snakeDir];
-  const head={x:snake[0].x+d[0],y:snake[0].y+d[1]};
-  /* 撞墙或咬到自己 */
-  if(head.x<0||head.x>=S_COLS||head.y<0||head.y>=S_ROWS||snake.some(s=>s.x===head.x&&s.y===head.y)){
+  if(!snakeLastTs) snakeLastTs=ts;
+  const dt=Math.min(.05,(ts-snakeLastTs)/1000);
+  snakeLastTs=ts;
+  snakeSteer(dt);
+  const speed=Math.min(S_SPEED_MAX,S_SPEED0+snakeScore*.5); /* 得分越高越快 */
+  const head=snake[0];
+  head.x+=Math.cos(snakeAngle)*speed*dt;
+  head.y+=Math.sin(snakeAngle)*speed*dt;
+  /* 撞墙 */
+  if(head.x<S_HEAD_R||head.x>S_W-S_HEAD_R||head.y<S_HEAD_R||head.y>S_H-S_HEAD_R){
     return snakeGameOver();
   }
-  snake.unshift(head);
-  if(head.x===snakeFood.x&&head.y===snakeFood.y){
+  /* 蛇身逐节跟随 */
+  for(let i=1;i<snake.length;i++){
+    const p=snake[i-1], q=snake[i];
+    const dx=q.x-p.x, dy=q.y-p.y, d=Math.hypot(dx,dy);
+    if(d>S_GAP){ q.x=p.x+dx/d*S_GAP; q.y=p.y+dy/d*S_GAP; }
+  }
+  /* 生长：尾部每帧补一个节点直到达到目标长度 */
+  if(snake.length<snakeLen){
+    const t=snake[snake.length-1];
+    snake.push({x:t.x,y:t.y});
+  }
+  /* 咬到自己（跳过颈部最近节点） */
+  for(let i=8;i<snake.length;i++){
+    if(Math.hypot(snake[i].x-head.x,snake[i].y-head.y)<S_HEAD_R+S_BODY_R-3){
+      return snakeGameOver();
+    }
+  }
+  /* 吃到食物 */
+  if(Math.hypot(snakeFood.x-head.x,snakeFood.y-head.y)<S_HEAD_R+S_FOOD_R+2){
     snakeScore+=10;
     document.getElementById('snakeScore').textContent=snakeScore;
     if(snakeScore>snakeHi){
@@ -1366,16 +1410,15 @@ function snakeTick(){
       localStorage.setItem(SNAKE_KEY,snakeHi);
       document.getElementById('snakeHi').textContent=snakeHi;
     }
+    snakeLen+=3;
     snakeDropFood();
-    snakeLoop(); /* 吃到食物后提速 */
-  }else{
-    snake.pop();
   }
   snakeDraw();
+  snakeRaf=requestAnimationFrame(snakeFrame);
 }
 
 function snakeGameOver(){
-  clearInterval(snakeTimer);
+  cancelAnimationFrame(snakeRaf);
   snakeState='over';
   document.getElementById('snakePauseBtn').textContent='暂停';
   snakeDraw(true);
@@ -1385,31 +1428,20 @@ function snakeGameOver(){
     '再来一局','得分 '+snakeScore+(isRecord?' · 新纪录':''));
 }
 
-/* 方向控制（禁止 180° 掉头） */
-function snakeTurn(dir){
-  const opp={up:'down',down:'up',left:'right',right:'left'};
-  if(snakeState!=='playing') return;
-  if(dir===opp[snakeDir]) return;
-  snakeNextDir=dir;
-}
-
 /* 绘制 */
 function snakeDraw(dead){
   const cv=document.getElementById('snakeCanvas');
   const ctx=cv.getContext('2d');
-  const W=S_COLS*S_CELL, H=S_ROWS*S_CELL;
-  ctx.clearRect(0,0,W,H);
+  ctx.clearRect(0,0,S_W,S_H);
   /* 背景 */
   ctx.fillStyle='#070a0f';
-  ctx.fillRect(0,0,W,H);
+  ctx.fillRect(0,0,S_W,S_H);
   /* 网格点 */
   ctx.fillStyle='rgba(74,222,128,.06)';
-  for(let x=0;x<S_COLS;x++)for(let y=0;y<S_ROWS;y++){
-    ctx.fillRect(x*S_CELL+S_CELL/2-1,y*S_CELL+S_CELL/2-1,2,2);
-  }
+  for(let x=10;x<S_W;x+=20)for(let y=10;y<S_H;y+=20){ ctx.fillRect(x-1,y-1,2,2); }
   /* 边框微光 */
   ctx.strokeStyle='rgba(74,222,128,.18)';
-  ctx.strokeRect(.5,.5,W-1,H-1);
+  ctx.strokeRect(.5,.5,S_W-1,S_H-1);
   if(!snake) return;
   /* 食物：霓虹粉能量点 */
   ctx.save();
@@ -1417,79 +1449,83 @@ function snakeDraw(dead){
   ctx.shadowBlur=12;
   ctx.fillStyle='#ff2d95';
   ctx.beginPath();
-  ctx.arc(snakeFood.x*S_CELL+S_CELL/2,snakeFood.y*S_CELL+S_CELL/2,S_CELL*.32,0,Math.PI*2);
+  ctx.arc(snakeFood.x,snakeFood.y,S_FOOD_R,0,Math.PI*2);
   ctx.fill();
   ctx.restore();
-  /* 蛇身 */
-  snake.forEach((s,i)=>{
-    const head=i===0;
-    ctx.save();
-    ctx.shadowColor=head?(dead?'#ff4d6d':'#4ade80'):'rgba(74,222,128,.4)';
-    ctx.shadowBlur=head?14:6;
-    ctx.fillStyle=head?(dead?'#ff4d6d':'#4ade80'):(i%2?'#2f9e5f':'#3fbf77');
-    const r=6,x=s.x*S_CELL+2,y=s.y*S_CELL+2,w=S_CELL-4;
+  /* 蛇身：从尾到头，半径渐粗 */
+  for(let i=snake.length-1;i>=1;i--){
+    const s=snake[i];
+    const t=i/snake.length;
+    ctx.fillStyle=i%2?'#2f9e5f':'#3fbf77';
     ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+w,r);
-    ctx.arcTo(x+w,y+w,x,y+w,r);
-    ctx.arcTo(x,y+w,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
+    ctx.arc(s.x,s.y,S_BODY_R*(1-.35*t),0,Math.PI*2);
     ctx.fill();
-    ctx.restore();
-    if(head){ /* 眼睛 */
-      ctx.fillStyle='#04120a';
-      const ex=s.x*S_CELL+S_CELL/2, ey=s.y*S_CELL+S_CELL/2;
-      const off=S_CELL*.14;
-      const eyes={right:[[off,-off],[off,off]],left:[[-off,-off],[-off,off]],up:[[-off,-off],[off,-off]],down:[[-off,off],[off,off]]}[snakeDir]||[[off,-off],[off,off]];
-      eyes.forEach(p=>{ctx.beginPath();ctx.arc(ex+p[0],ey+p[1],1.8,0,Math.PI*2);ctx.fill();});
-    }
+  }
+  /* 头 */
+  const h=snake[0];
+  ctx.save();
+  ctx.shadowColor=dead?'#ff4d6d':'#4ade80';
+  ctx.shadowBlur=14;
+  ctx.fillStyle=dead?'#ff4d6d':'#4ade80';
+  ctx.beginPath();
+  ctx.arc(h.x,h.y,S_HEAD_R,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  /* 眼睛朝向移动方向 */
+  const fx=Math.cos(snakeAngle), fy=Math.sin(snakeAngle);
+  const px=-fy, py=fx;
+  ctx.fillStyle='#04120a';
+  [-1,1].forEach(side=>{
+    ctx.beginPath();
+    ctx.arc(h.x+fx*3+px*side*4,h.y+fy*3+py*side*4,1.8,0,Math.PI*2);
+    ctx.fill();
   });
 }
 
-/* D-pad 按键 */
-document.querySelectorAll('#snakeDpad .dpad-btn[data-dir]').forEach(b=>{
-  b.addEventListener('click',e=>{
+/* 摇杆：360° 任意转向 */
+(function snakeJoystick(){
+  const joy=document.getElementById('snakeJoy');
+  const knob=document.getElementById('snakeJoyKnob');
+  const R=34; /* 摇杆活动半径 */
+  let pid=null;
+  function setKnob(dx,dy){
+    knob.style.transform=`translate(-50%,-50%) translate(${dx}px,${dy}px)`;
+  }
+  function handle(e){
+    const r=joy.getBoundingClientRect();
+    let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+    const d=Math.hypot(dx,dy);
+    if(d>R){ dx=dx/d*R; dy=dy/d*R; }
+    setKnob(dx,dy);
+    if(d>8) snakeTargetAngle=Math.atan2(dy,dx); /* 死区外才更新方向 */
+  }
+  joy.addEventListener('pointerdown',e=>{
+    pid=e.pointerId;
+    joy.setPointerCapture(pid);
+    handle(e);
     e.stopPropagation();
-    snakeTurn(b.dataset.dir);
   });
-});
-
-/* 滑动控制（阻止冒泡以免触发下滑退出） */
-(function snakeTouch(){
-  const stage=document.getElementById('snakeStage');
-  let sx=0,sy=0;
-  stage.addEventListener('touchstart',e=>{
-    sx=e.touches[0].clientX; sy=e.touches[0].clientY;
-    e.stopPropagation();
-  },{passive:true});
-  stage.addEventListener('touchend',e=>{
-    e.stopPropagation();
-    const dx=e.changedTouches[0].clientX-sx;
-    const dy=e.changedTouches[0].clientY-sy;
-    if(Math.abs(dx)<24&&Math.abs(dy)<24) return;
-    if(Math.abs(dx)>Math.abs(dy)) snakeTurn(dx>0?'right':'left');
-    else snakeTurn(dy>0?'down':'up');
-  },{passive:true});
-  /* 鼠标拖动同样支持 */
-  let mDown=false;
-  stage.addEventListener('mousedown',e=>{mDown=true;sx=e.clientX;sy=e.clientY;});
-  stage.addEventListener('mouseup',e=>{
-    if(!mDown) return; mDown=false;
-    const dx=e.clientX-sx, dy=e.clientY-sy;
-    if(Math.abs(dx)<24&&Math.abs(dy)<24) return;
-    if(Math.abs(dx)>Math.abs(dy)) snakeTurn(dx>0?'right':'left');
-    else snakeTurn(dy>0?'down':'up');
-  });
+  joy.addEventListener('pointermove',e=>{ if(e.pointerId===pid) handle(e); });
+  function release(e){
+    if(e.pointerId!==pid) return;
+    pid=null;
+    setKnob(0,0); /* 松手回中，蛇保持当前方向继续前进 */
+  }
+  joy.addEventListener('pointerup',release);
+  joy.addEventListener('pointercancel',release);
+  /* 阻止冒泡，避免触发全局触摸手势 */
+  joy.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
+  joy.addEventListener('touchend',e=>e.stopPropagation(),{passive:true});
 })();
 
-/* 键盘方向键 / WASD */
+/* 键盘方向键 / WASD（映射到目标角度，平滑转过去） */
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('snakeScreen').classList.contains('show')) return;
-  const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
-  const dir=map[e.key];
-  if(dir){
+  const map={ArrowUp:-Math.PI/2,ArrowDown:Math.PI/2,ArrowLeft:Math.PI,ArrowRight:0,w:-Math.PI/2,s:Math.PI/2,a:Math.PI,d:0};
+  const ang=map[e.key];
+  if(ang!==undefined){
     if(e.key.startsWith('Arrow')) e.preventDefault();
-    if(snakeState==='playing'){ snakeTurn(dir); }
+    if(snakeState==='playing'){ snakeTargetAngle=ang; }
     else if(snakeState==='paused'){ snakeResume(); }
     else if(snakeState==='idle'||snakeState==='over'){ snakeStart(); }
   }
