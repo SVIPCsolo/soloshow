@@ -561,6 +561,23 @@ body{
 .rich-toast.pop{animation:richToastPop 1.3s ease forwards}
 @keyframes richToastPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(.98)}}
 
+/* ================= 人生模拟器 ================= */
+.life-age{margin-left:auto;font-size:14px;font-weight:800;color:#ffd166;font-family:'Courier New',monospace;letter-spacing:1px}
+.life-attrs{margin-top:6px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.life-attr{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:11px;color:#c4c8d6}
+.life-attr:last-child{margin-bottom:0}
+.life-attr-name{width:26px;letter-spacing:2px;flex:none}
+.life-attr-bar{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.life-attr-fill{height:100%;border-radius:99px;transition:width .4s}
+.life-attr-num{width:26px;text-align:right;font-family:'Courier New',monospace;font-size:11px;flex:none}
+.life-card{margin-top:14px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.04);border-left:3px solid #ffd166;font-size:13.5px;line-height:1.9;color:#e8eaf2}
+.life-role{font-size:10px;color:#6b7289;letter-spacing:2px;margin-bottom:8px}
+.life-delta{display:block;margin-top:12px;font-size:11.5px;font-family:'Courier New',monospace;color:#7ee2a8;letter-spacing:.5px}
+.life-choices{margin-top:14px;display:flex;flex-direction:column;gap:10px;padding-bottom:10px}
+.life-choice{padding:13px 16px;border-radius:13px;border:1px solid rgba(255,209,102,.25);background:rgba(255,209,102,.06);color:#e8eaf2;font-size:13px;text-align:left;cursor:pointer;transition:transform .08s,background .15s;line-height:1.6}
+.life-choice:active{transform:scale(.97);background:rgba(255,209,102,.15)}
+.life-choice.primary{background:linear-gradient(135deg,#ffd166,#ffb340);color:#231a05;font-weight:700;text-align:center;border:none;letter-spacing:2px}
+
 /* ================= 创始人页面 ================= */
 .founder-hero{
   display:flex;justify-content:center;align-items:flex-start;gap:38px;
@@ -694,6 +711,13 @@ body{
             <span style="font-size:30px;filter:drop-shadow(0 0 6px rgba(255,209,102,.6))">💰</span>
           </div>
           <div class="app-label">首富模拟器</div>
+        </div>
+
+        <div class="app" onclick="openLife()">
+          <div class="app-icon">
+            <span style="font-size:30px;filter:drop-shadow(0 0 6px rgba(192,132,252,.6))">🎭</span>
+          </div>
+          <div class="app-label">人生模拟器</div>
         </div>
       </div>
 
@@ -1067,6 +1091,22 @@ body{
       <div class="rich-toast" id="richToast"></div>
     </div>
 
+    <!-- ========== 人生模拟器 ========== -->
+    <div class="level2" id="lifeScreen" style="z-index:44">
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeLife()" aria-label="返回">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">人生模拟器</div>
+        <div class="life-age" id="lifeAge">--</div>
+      </div>
+      <div class="level2-content">
+        <div class="life-attrs" id="lifeAttrs"></div>
+        <div class="life-card" id="lifeCard"></div>
+        <div class="life-choices" id="lifeChoices"></div>
+      </div>
+    </div>
+
     <!-- ========== 创始人 ========== -->
     <div class="level2" id="founderScreen" style="z-index:46">
       <div class="setting-header">
@@ -1283,6 +1323,7 @@ function closeRefresh(){
 function topLayer(){
   if(document.getElementById('userScreen').classList.contains('show')) return 'users';
   if(document.getElementById('founderScreen').classList.contains('show')) return 'founder';
+  if(document.getElementById('lifeScreen').classList.contains('show')) return 'life';
   if(document.getElementById('richScreen').classList.contains('show')) return 'rich';
   if(document.getElementById('snakeScreen').classList.contains('show')) return 'snake';
   if(document.getElementById('refreshScreen').classList.contains('show')) return 'refresh';
@@ -1295,6 +1336,7 @@ function backTop(){
   switch(topLayer()){
     case 'users': closeUsers();break;
     case 'founder': closeFounder();break;
+    case 'life': closeLife();break;
     case 'rich': closeRich();break;
     case 'snake': closeSnake();break;
     case 'refresh': closeRefresh();break;
@@ -1801,6 +1843,286 @@ function richDrawParticles(now){
   });
 }
 window.addEventListener('pagehide',richSave);
+
+/* ========== 人生模拟器 ========== */
+const LIFE_KEY='soloshow-life-v1';
+const LIFE_ATTRS=['智慧','体质','魅力','财运','情绪'];
+const LIFE_COLORS={'智慧':'#4da6ff','体质':'#4ade80','魅力':'#ff8ac2','财运':'#ffd166','情绪':'#c084fc'};
+/* 随机事件池：a=年龄段，w=权重（默认1），t=情境，c=选择（x=文本,e=属性变化或函数,r=结果,go=后续事件id） */
+const LIFE_EVENTS=[
+{a:[6,12],t:'语文课上老师点名让你背课文，而你昨晚忘了复习。',c:[
+ {x:'硬着头皮乱背一通',e:{智慧:-2,情绪:-3},r:'你结结巴巴背错了好几处，全班哄堂大笑。'},
+ {x:'坦白承认没复习',e:{魅力:3,情绪:2},r:'老师欣赏你的诚实，只提醒你下不为例。'},
+ {x:'凭理解复述大意',e:{智慧:4},r:'你用自己的话讲出了课文的意思，老师夸你悟性好。'}]},
+{a:[6,12],t:'体育课跑步比赛，你在弯道狠狠摔了一跤。',c:[
+ {x:'咬牙爬起来跑完',e:{体质:3,情绪:-2},r:'膝盖火辣辣地疼，但全班为你鼓掌。'},
+ {x:'举手去医务室',e:{体质:1},r:'校医给你擦了药水，没什么大碍。'},
+ {x:'坐在地上哭鼻子',e:{魅力:-2,情绪:-3},r:'同学们围过来安慰你，你觉得有点丢脸。'}]},
+{a:[6,12],t:'放学路上，你捡到一张五十元钞票。',c:[
+ {x:'交给警察叔叔',e:{魅力:4,情绪:2},r:'警察叔叔摸你的头夸你拾金不昧。'},
+ {x:'买一堆零食',e:{情绪:4,财运:-1},r:'零食很香，但回家的路上你有点心虚。'},
+ {x:'存进储蓄罐',e:{财运:4},r:'储蓄罐沉了一点，你莫名有种成就感。'}]},
+{a:[6,12],t:'同桌凑过来：「作业借我抄抄？」',c:[
+ {x:'直接拒绝',e:{智慧:2,魅力:-2},r:'同桌撇撇嘴转过身去，你们冷战了两天。'},
+ {x:'借给他抄',e:{魅力:3,智慧:-1},r:'同桌成了你的跟班，但你总觉得哪里不对。'},
+ {x:'教他解题思路',e:{智慧:4,魅力:2},r:'讲完一遍，你自己对题目理解得更透了。'}]},
+{a:[6,12],t:'学校举办绘画比赛，报名表就放在讲台上。',c:[
+ {x:'报名试试',e:{魅力:3,情绪:5},r:'你的《我的家》拿了二等奖，奖状贴在了客厅墙上。'},
+ {x:'悄悄路过',e:{情绪:-1},r:'颁奖那天你坐在台下，心里空落落的。'}]},
+{a:[6,12],t:'半夜你烧到 40 度，爸妈都睡熟了。',c:[
+ {x:'硬扛到天亮',e:{体质:-6,情绪:-2},r:'第二天你晕在教室里，被送去了医院。'},
+ {x:'叫醒爸妈去医院',e:{体质:-2,情绪:2},r:'打了退烧针，妈妈整夜握着你的手。'},
+ {x:'自己倒水喝再睡',e:{体质:-3},r:'你迷迷糊糊睡了过去，幸好天亮退烧了。'}]},
+{a:[6,12],t:'巷口有只脏兮兮的小猫，一直跟着你。',c:[
+ {x:'抱回家收养',e:{情绪:6,财运:-2},r:'它成了你的家人，每天蹲在门口等你放学。'},
+ {x:'帮它找领养',e:{情绪:2,智慧:2},r:'你在布告栏贴了手绘的领养启事，三天后它有了新家。'},
+ {x:'狠心走开',e:{情绪:-3},r:'那一整天，你耳边都是它的叫声。'}]},
+{a:[13,15],t:'中考倒计时一百天，教室后墙贴满了标语。',c:[
+ {x:'开启地狱刷题模式',e:{智慧:6,体质:-3,情绪:-3},r:'你的分数肉眼可见地涨，但黑眼圈也深了。'},
+ {x:'劳逸结合按计划来',e:{智慧:3,体质:2},r:'节奏很稳，你的状态越来越好。'},
+ {x:'先玩两天再说',e:{智慧:-4,情绪:3},r:'快乐是真实的，焦虑也是。'}]},
+{a:[13,15],t:'后排传来纸条：放学后操场见，隔壁班那谁要找你麻烦。',c:[
+ {x:'单刀赴会',e:{体质:-5,魅力:3},r:'你们打了一架，谁也没赢，但他再没找过你。'},
+ {x:'撒腿跑为上策',e:{体质:2},r:'你跑得比想象快，风在耳边呼呼响。'},
+ {x:'报告班主任',e:{智慧:2,情绪:-2},r:'事情平息了，但有人叫你「告状精」。'}]},
+{a:[13,18],t:'旧书摊角落，一本泛黄的手写笔记只要五块钱。',c:[
+ {x:'买下彻夜研读',e:{智慧:6},r:'里面密密麻麻的批注，让你打开了新世界。'},
+ {x:'转手卖给同学',e:{财运:3},r:'你二十块卖出去了，生平第一笔「生意」。'},
+ {x:'翻两页放下',e:{},r:'你不知道你错过了什么。'}]},
+{a:[16,18],t:'高考前的最后一个月，空气都是紧绷的。',c:[
+ {x:'正常发挥走进考场',e:{情绪:-2},r:'铃声响起，你深吸一口气翻开试卷。',go:l=>l.attrs.智慧>=58?'f_college':'f_fail'},
+ {x:'考前通宵突击',e:{智慧:2,体质:-3},r:'你顶着熊猫眼进了考场。',go:l=>l.attrs.智慧>=55?'f_college':'f_fail'},
+ {x:'弃考，去城里打工',e:{财运:3},r:'你背着编织袋挤上了绿皮火车。',go:'f_fail'}]},
+{a:[16,18],t:'你发现自己在偷偷注意前排那个扎马尾的同学。',c:[
+ {x:'写封信递过去',e:{魅力:2,情绪:3},r:'第二天你的抽屉里多了一颗橘子味的糖。'},
+ {x:'把心思埋进书里',e:{智慧:3,情绪:-2},r:'马尾辫在视野里晃，题目忽然变得难解。'}]},
+{a:[16,18],t:'同桌神秘兮兮：「网吧新开了家，晚自习翻墙去？」',c:[
+ {x:'翻墙！',e:{情绪:5,智慧:-4},r:'那晚的五杀很爽，第二天的罚站也很长。'},
+ {x:'坚决不去',e:{智慧:2,魅力:-2},r:'同桌说你扫兴，你假装没听见。'}]},
+{a:[16,22],t:'暑假，商场门口招发传单的兼职，一天八十。',c:[
+ {x:'咬牙干满一个月',e:{财运:5,体质:-2},r:'你赚到了人生第一笔工资，请全家吃了顿饭。'},
+ {x:'干三天就溜了',e:{情绪:-1},r:'太阳太毒，你的毅力还不够晒。'},
+ {x:'研究人流规律再发',e:{智慧:3,财运:3},r:'你的派发效率是全组第一，店长想挖你当组长。'}]},
+{a:[19,22],t:'大学社团招新，百团大战挤满了整条林荫道。',c:[
+ {x:'加入辩论队',e:{智慧:4,魅力:3},r:'你学会了在三分钟内把任何观点讲得掷地有声。'},
+ {x:'加入街舞社',e:{魅力:5,体质:2},r:'迎新晚会上，你们的节目压轴。'},
+ {x:'都不感兴趣',e:{情绪:-2},r:'宿舍、食堂、教室，三点一线。'}]},
+{a:[19,25],t:'咖啡店招兼职，时薪不高但氛围很好。',c:[
+ {x:'长期做下去',e:{财运:4,体质:-2},r:'你记住了每位熟客的口味。'},
+ {x:'顺便学拉花',e:{智慧:2,魅力:2},r:'你拉出的第一颗爱心歪了，但很可爱。'}]},
+{a:[19,25],t:'宿舍楼下有人摆地摊，你动了心思。',c:[
+ {x:'批点小饰品试试',e:{财运:5,情绪:2},r:'第一周就回本了，你开始琢磨进货渠道。'},
+ {x:'卖烤肠！',e:{财运:7,体质:-3},r:'油烟熏了三个月，钱包鼓了，头发也油了。'},
+ {x:'想想还是算了',e:{},r:'别人的摊子前总是排着队。'}]},
+{a:[19,22],t:'毕业季站在岔路口：考研、就业，还是 gap 一年？',c:[
+ {x:'考研深造',e:{智慧:5,财运:-2},r:'图书馆的灯陪你熬过了整个冬天。',go:l=>l.attrs.智慧>=65?'f_gradschool':null},
+ {x:'直接就业',e:{财运:4},r:'你穿上了第一套正装，领带打得歪歪扭扭。'},
+ {x:'gap 一年去看世界',e:{情绪:6,财运:-3},r:'你在青年旅舍的天台上看了四十场日落。'}]},
+{a:[19,30],t:'异地恋的对方发来消息：「我们好像走不下去了。」',c:[
+ {x:'连夜坐车去挽回',e:{情绪:-3,魅力:2},r:'站台上你们抱头痛哭，决定再撑一撑。'},
+ {x:'体面地道别',e:{情绪:-2,智慧:2},r:'你把聊天记录删了，把祝福留下。'},
+ {x:'大醉一场',e:{情绪:-5,体质:-2},r:'宿醉的头疼了两天，心更疼。'}]},
+{a:[22,35],t:'项目上线前夜，你已经连轴转了一周。',c:[
+ {x:'再撑一晚',e:{财运:4,体质:-6},r:'上线成功了，你在工位上睡了十四个小时。'},
+ {x:'请假休息',e:{体质:3,财运:-1},r:'你睡了个好觉，地球没你也照转。'},
+ {x:'提离职',e:{情绪:3,财运:-2},r:'走出写字楼那一刻，天特别蓝。'}]},
+{a:[20,30],t:'攻略上说，三千块就能穷游西藏。',c:[
+ {x:'出发！',e:{情绪:7,财运:-4,体质:-2},r:'布达拉宫前，你突然理解了什么叫辽阔。'},
+ {x:'以后再说',e:{情绪:-1},r:'「以后」是个很容易过期的词。'}]},
+{a:[26,35],t:'部门主管职位空缺，经理暗示可以争取。',c:[
+ {x:'主动请缨',e:{智慧:3,财运:5,情绪:2},r:'竞聘演讲很成功，你的工位换到了窗边。'},
+ {x:'让给老同事',e:{魅力:3,情绪:1},r:'老同事请你喝了顿酒，记了你一个人情。'},
+ {x:'再观望观望',e:{},r:'位置很快被隔壁部门的人拿走了。'}]},
+{a:[26,40],t:'朋友神秘兮兮推荐一只「稳赚」的股票。',c:[
+ {x:'重仓杀入',e:l=>Math.random()<.5?{财运:10,情绪:4}:{财运:-9,情绪:-5},r:'K线像过山车，你真切懂了什么叫心跳。'},
+ {x:'小仓位试水',e:{财运:2,智慧:1},r:'小赚一笔，你开始认真研究财报。'},
+ {x:'婉拒',e:{},r:'三个月后那只股票腰斩，你后背发凉。'}]},
+{a:[26,40],t:'看了半年的房子，销售说今天不定就涨价。',c:[
+ {x:'咬牙上车',e:{财运:-8,情绪:5},r:'拿到钥匙那晚，你在空荡荡的客厅躺到半夜。'},
+ {x:'再等等',e:{财运:2,情绪:-2},r:'房价真的又涨了，你不敢看中介的朋友圈。'}]},
+{a:[26,40],t:'婚礼怎么办？两家人坐在一起商量。',c:[
+ {x:'办一场盛大的',e:{财运:-6,情绪:7,魅力:3},r:'交换戒指时，台下哭倒一片。'},
+ {x:'旅行结婚',e:{情绪:5,财运:-2},r:'洱海边的誓言，只有风声作证。'},
+ {x:'简单登记就好',e:{财运:2,情绪:1},r:'九块钱的红本本，一样郑重。'}]},
+{a:[26,40],t:'一个创业点子在你脑子里转了半年，越想越睡不着。',c:[
+ {x:'辞职，全力干！',e:{财运:-4},r:'你租下二十平米的办公室，挂上了手写的招牌。',go:'f_startup'},
+ {x:'先入股别人的团队',e:{财运:-2},r:'你用积蓄换了 5% 的股份，静观其变。'},
+ {x:'把念头按灭',e:{情绪:-2},r:'只是偶尔深夜，那个点子还会冒出来。'}]},
+{a:[26,45],t:'裁员名单上有你的名字。',c:[
+ {x:'拿赔偿金走人',e:{财运:2},r:'签字那天，你把工牌留在了桌上。',go:'f_reemploy'},
+ {x:'申请内部转岗',e:{情绪:-3},r:'新部门的工位在角落，但你保住了饭碗。'},
+ {x:'申请劳动仲裁',e:{智慧:3,情绪:-3},r:'你赢回了公道，也耗掉了一个春天。'}]},
+{a:[22,50],w:.35,t:'路过彩票站，口袋里的零钱叮当作响。',c:[
+ {x:'随手来一注',e:l=>Math.random()<.25?{财运:12,情绪:8}:{财运:-1,情绪:-1},r:'开奖那晚你守在电视前，手心全是汗。'},
+ {x:'摇摇头走开',e:{},r:'运气这东西，你一向不太信。'}]},
+{a:[26,45],t:'体检报告上，好几个箭头朝上朝下。',c:[
+ {x:'立刻办健身卡',e:{体质:6},r:'三个月后，爬六楼不喘了。'},
+ {x:'改成夜跑',e:{体质:4,情绪:2},r:'江边的晚风成了你的私教。'},
+ {x:'报告塞进抽屉',e:{体质:-4},r:'身体默默记下了这笔账。'}]},
+{a:[41,60],t:'孩子也要高考了，家里气氛微妙。',c:[
+ {x:'全职陪读',e:{情绪:4,财运:-2},r:'深夜台灯下，你忽然想起了当年的自己。'},
+ {x:'请最好的家教',e:{财运:-3,智慧:2},r:'钱花得肉疼，但孩子的模考成绩涨了。'},
+ {x:'顺其自然',e:{情绪:1},r:'你告诉孩子：尽力就好。'}]},
+{a:[41,60],t:'体检科医生皱着眉，建议住院详细检查。',c:[
+ {x:'住院调理',e:{体质:5,财运:-4},r:'病房的窗外有棵梧桐，你看着它从绿到黄。'},
+ {x:'忙，没空',e:{体质:-6},r:'你把预约单揉成一团，塞进了口袋。'},
+ {x:'彻底改变生活习惯',e:{体质:4,情绪:2},r:'戒烟戒酒早睡，老朋友都说你变了个人。'}]},
+{a:[41,60],t:'行业峰会发来邀请函，请你做主题演讲。',c:[
+ {x:'登台分享',e:{魅力:5,智慧:3},r:'台下闪光灯一片，你的演讲上了行业头条。'},
+ {x:'婉拒',e:{情绪:1},r:'你把名额推荐给了团队里的年轻人。'}]},
+{a:[41,60],t:'二十年没见的老同桌突然打来电话。',c:[
+ {x:'约出来把酒言欢',e:{情绪:6},r:'你们从黄昏聊到打烊，像回到了十七岁。'},
+ {x:'聊聊有没有合作',e:{财运:4,情绪:2},r:'老朋友成了新伙伴，一举两得。'}]},
+{a:[41,60],t:'早年投资的项目暴雷了，群里炸了锅。',c:[
+ {x:'果断止损',e:{财运:-6,智慧:1},r:'割肉很疼，但保住了很多。'},
+ {x:'追加摊平成本',e:l=>Math.random()<.4?{财运:8}:{财运:-10},r:'这是一场豪赌，赌注是多年的积蓄。'},
+ {x:'找律师咨询',e:{智慧:3,财运:-2},r:'维权之路很长，但至少有方向。'}]},
+{a:[41,60],t:'公益组织问你是否愿意资助一名山区学生。',c:[
+ {x:'每年资助直到大学',e:{财运:-3,情绪:7,魅力:3},r:'孩子寄来的信上写着：「谢谢小红阿姨/叔叔」。'},
+ {x:'一次性捐一笔',e:{财运:-1,情绪:3},r:'收据你夹进了日记本。'},
+ {x:'婉拒',e:{},r:'你有你的难处。'}]},
+{a:[41,60],t:'社区大学开了门编程课，你盯着海报看了很久。',c:[
+ {x:'报名并坚持学完',e:{智慧:6},r:'结业作品是个小程序，孙子辈抢着玩。'},
+ {x:'学了一半搁置',e:{情绪:-2},r:'教材在书架上落了灰。'},
+ {x:'边学边接小活',e:{智慧:3,财运:3},r:'你的「银发程序员」名片在小区出了名。'}]},
+{a:[6,60],w:.5,t:'路口一辆电动车擦着你倒下的瞬间，世界天旋地转。',c:[
+ {x:'去医院全面检查',e:{体质:-3,财运:-1},r:'所幸只是皮外伤，你长舒一口气。'},
+ {x:'私了拿钱走人',e:{财运:1,体质:-2},r:'对方赔了两百块，你的胳膊青了一周。'}]},
+{a:[16,60],w:.35,t:'整理老宅，你在阁楼翻出个蒙灰的祖传花瓶。',c:[
+ {x:'送去鉴定',e:{财运:8,智慧:2},r:'专家推了推眼镜：「清中期的，保存得不错。」'},
+ {x:'擦干净摆客厅',e:{情绪:2},r:'阳光照进来的时候，它确实好看。'}]},
+{a:[19,60],w:.35,t:'雨夜，你把唯一一把伞让给了一位落魄的老人。',c:[
+ {x:'不留姓名离开',e:{魅力:4,情绪:4,财运:5},r:'一周后你才知道，老人是退休的企业家，点名要资助你的新项目。'},
+ {x:'留下联系方式',e:{财运:3,魅力:2},r:'后来你们成了忘年交。'}]},
+];
+/* 事件链后续（不进随机池） */
+const LIFE_FOLLOW={
+ f_college:{t:'录取通知书寄到了家里——小红考上了重点大学！全家围着那张红纸看了又看。',c:[
+  {x:'选热门专业',e:{智慧:4,财运:2},r:'计算机楼灯火通明，你的大学四年很充实。'},
+  {x:'选喜欢的冷门专业',e:{智慧:5,情绪:4},r:'别人笑你傻，你学得如痴如醉。'},
+  {x:'顺便加入学生会',e:{魅力:4},r:'迎新晚会的后台，你忙得脚不沾地。'}]},
+ f_fail:{t:'放榜那天，榜单上从头看到尾，没有小红的名字。',c:[
+  {x:'复读一年再战',e:{智慧:4,情绪:-4},r:'复读班的窗帘一年没拉开过，你比谁都拼命。'},
+  {x:'进城打工',e:{财运:4,体质:-2},r:'流水线很吵，但第一个月工资到手时你笑出了声。'},
+  {x:'学门手艺',e:{智慧:3,财运:2},r:'师傅说你的手很稳，是块料。'}]},
+ f_startup:{t:'创业第三年，公司账上的钱只够发最后一个月工资。而今晚，一份投资意向书就摆在面前。',c:[
+  {x:'接受投资，扩张！',e:l=>Math.random()<.5?{财运:15,情绪:6}:{财运:-6,情绪:-5},r:'签字笔落下的那一刻，命运的齿轮开始转动。'},
+  {x:'稳扎稳打不扩张',e:{财运:4},r:'你把意向书折好收进抽屉，先把产品打磨到极致。'},
+  {x:'把公司卖了',e:{财运:10,情绪:-2},r:'套现离场。庆功宴上你笑着笑着就沉默了。'}]},
+ f_reemploy:{t:'休息了三个月，存款在减少，斗志在回血。该重新出发了。',c:[
+  {x:'转行去新行业',e:{智慧:4,财运:2},r:'从头学起的日子很苦，但眼里有光。'},
+  {x:'降薪先入职',e:{财运:2,情绪:-2},r:'工资少了一截，好歹生活回到正轨。'},
+  {x:'做自由职业',e:{情绪:4,财运:-2},r:'时间自由了，收入像过山车。'}]},
+ f_gradschool:{t:'研究生录取通知书如期而至，导师是业内公认的泰斗。',c:[
+  {x:'埋头做科研',e:{智慧:6},r:'你的论文登上了核心期刊。'},
+  {x:'科研实习两手抓',e:{财运:3,体质:-2},r:'地铁上补觉成了你的超能力。'}]},
+};
+let life=null;
+
+function lifeSave(){ try{ localStorage.setItem(LIFE_KEY,JSON.stringify(life)); }catch(e){} }
+function lifeRole(age){
+  if(age<=12) return'小学生'; if(age<=15) return'初中生'; if(age<=18) return'高中生';
+  if(age<=22) return'大学生'; if(age<=30) return'职场新人'; if(age<=45) return'社会中坚';
+  return'知天命之年';
+}
+function lifeNew(){
+  life={age:6,stage:'intro',cur:-1,last:-1,follow:null,result:'',ending:null,attrs:{}};
+  LIFE_ATTRS.forEach(k=>life.attrs[k]=45+Math.floor(Math.random()*21));
+  lifeSave(); lifeRender();
+}
+function openLife(){
+  document.getElementById('lifeScreen').classList.add('show');
+  if(!life){ try{ life=JSON.parse(localStorage.getItem(LIFE_KEY)); }catch(e){} }
+  if(!life) lifeNew(); else lifeRender();
+}
+function closeLife(){
+  document.getElementById('lifeScreen').classList.remove('show');
+  lifeSave();
+}
+/* 加权随机抽一个符合年龄段的事件，避免与上一回合重复 */
+function lifePickEvent(){
+  let pool=LIFE_EVENTS.map((e,i)=>i).filter(i=>i!==life.last&&life.age>=LIFE_EVENTS[i].a[0]&&life.age<=LIFE_EVENTS[i].a[1]);
+  if(!pool.length) pool=LIFE_EVENTS.map((e,i)=>i).filter(i=>i!==life.last);
+  let tw=0; pool.forEach(i=>tw+=(LIFE_EVENTS[i].w||1));
+  let r=Math.random()*tw;
+  for(const i of pool){ r-=(LIFE_EVENTS[i].w||1); if(r<=0) return i; }
+  return pool[0];
+}
+function lifeCheckEnding(){
+  const a=life.attrs;
+  if(a.体质<=0) return{k:'悲剧 · 油尽灯枯',d:'常年的透支拖垮了身体，小红的人生在 '+life.age+' 岁戛然而止。亲友整理遗物时，发现抽屉里还放着没来得及吃的药。'};
+  if(a.情绪<=0) return{k:'悲剧 · 心灵崩塌',d:'在一个雨夜，积攒多年的阴霾彻底淹没了小红。TA 关掉手机，独自离开了这座城市，从此杳无音信。'};
+  if(life.age>=60){
+    if(a.财运>=85) return{k:'结局 · 传奇富豪',d:'退休宴上，小红名下的资产令人咋舌。有人问成功的秘诀，TA 笑了笑：「不过是每次选择，都没辜负当年的自己。」'};
+    if(a.智慧>=85) return{k:'结局 · 学界泰斗',d:'小红的著作被译成十几种语言，讲台上桃李满天下。生日那天，学生从世界各地赶来为 TA 祝寿。'};
+    if(a.财运<=30) return{k:'结局 · 一生坎坷',d:'命运似乎总爱和小红开玩笑。但即使口袋空空，TA 仍会在黄昏的公园里，把仅有的面包分给流浪猫。'};
+    if(a.情绪>=75&&a.体质>=55) return{k:'结局 · 平凡幸福',d:'没有惊天动地的成就，但小红的家里永远有热汤和笑声。儿女绕膝，老友常聚——这是许多人求而不得的一生。'};
+    return{k:'结局 · 普通安稳',d:'小红的一生像一条平缓的河：有过波澜，有过遗憾，最终静静汇入大海。回头看，每一步都算数。'};
+  }
+  if(Math.random()<.012) return{k:'意外 · 天有不测',d:'人生无常。一场突如其来的意外，在 '+life.age+' 岁那年带走了小红。明天和意外，永远不知道哪个先来。'};
+  return null;
+}
+function lifeChoose(i){
+  if(!life||life.stage!=='event') return;
+  const ev=life.follow?LIFE_FOLLOW[life.follow]:LIFE_EVENTS[life.cur];
+  const ch=ev.c[i];
+  if(!ch) return;
+  const delta=typeof ch.e==='function'?ch.e(life):(ch.e||{});
+  const parts=[];
+  LIFE_ATTRS.forEach(k=>{
+    const v=delta[k]||0;
+    if(v){ life.attrs[k]=Math.max(0,Math.min(100,life.attrs[k]+v)); parts.push(k+(v>0?'+':'')+v); }
+  });
+  life.result=(typeof ch.r==='function'?ch.r(life):ch.r)
+    +(parts.length?`<span class="life-delta">${parts.join(' · ')}</span>`:'');
+  life.follow=typeof ch.go==='function'?ch.go(life):(ch.go||null);
+  life.stage='result';
+  lifeSave(); lifeRender();
+}
+function lifeContinue(){
+  if(!life) return;
+  if(life.stage==='intro'){
+    life.cur=lifePickEvent(); life.last=life.cur; life.stage='event';
+    lifeSave(); lifeRender(); return;
+  }
+  let end=lifeCheckEnding();
+  if(end){ life.stage='over'; life.ending=end; lifeSave(); lifeRender(); return; }
+  life.age+=1+Math.floor(Math.random()*3);
+  if(life.age>40) life.attrs.体质=Math.max(1,life.attrs.体质-1); /* 中年以后体质缓慢流失 */
+  end=lifeCheckEnding();
+  if(end){ life.stage='over'; life.ending=end; lifeSave(); lifeRender(); return; }
+  if(!life.follow){ life.cur=lifePickEvent(); life.last=life.cur; }
+  life.stage='event';
+  lifeSave(); lifeRender();
+}
+const LIFE_NUMS=['①','②','③','④'];
+function lifeRender(){
+  document.getElementById('lifeAge').textContent=life.age+' 岁';
+  document.getElementById('lifeAttrs').innerHTML=LIFE_ATTRS.map(k=>
+    `<div class="life-attr"><div class="life-attr-name">${k}</div>
+     <div class="life-attr-bar"><div class="life-attr-fill" style="width:${life.attrs[k]}%;background:${LIFE_COLORS[k]}"></div></div>
+     <div class="life-attr-num" style="color:${LIFE_COLORS[k]}">${life.attrs[k]}</div></div>`).join('');
+  const card=document.getElementById('lifeCard');
+  const box=document.getElementById('lifeChoices');
+  if(life.stage==='intro'){
+    card.innerHTML=`<div class="life-role">出生 · 江南小城</div>小红，6 岁，出生在双职工家庭。今天是小学开学第一天，书包里装着崭新的铅笔盒。<br><br>人生漫漫，从此刻开始。`;
+    box.innerHTML=`<button class="life-choice primary" onclick="lifeContinue()">开始人生 →</button>`;
+    return;
+  }
+  if(life.stage==='event'){
+    const ev=life.follow?LIFE_FOLLOW[life.follow]:LIFE_EVENTS[life.cur];
+    card.innerHTML=`<div class="life-role">${lifeRole(life.age)} · ${life.age}岁</div>${ev.t}`;
+    box.innerHTML=ev.c.map((c,i)=>`<button class="life-choice" onclick="lifeChoose(${i})">${LIFE_NUMS[i]} ${c.x}</button>`).join('');
+    return;
+  }
+  if(life.stage==='result'){
+    card.innerHTML=life.result;
+    box.innerHTML=`<button class="life-choice primary" onclick="lifeContinue()">继续人生 →</button>`;
+    return;
+  }
+  card.innerHTML=`<div class="life-role">人生落幕 · 享年 ${life.age} 岁</div><b style="color:#ffd166;font-size:17px">${life.ending.k}</b><br><br>${life.ending.d}`;
+  box.innerHTML=`<button class="life-choice primary" onclick="lifeNew()">再来一世 ↻</button>`;
+}
 
 /* ========== 初始化 ========== */
 renderHzGrid();
