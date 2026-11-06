@@ -607,6 +607,23 @@ body{
 .gmk-restart{width:42px;height:42px;flex:none;border-radius:50%;border:none;background:linear-gradient(145deg,#6b4a2c,#523620);color:#e8c884;font-size:18px;cursor:pointer}
 .gmk-cap{text-align:center;color:rgba(232,200,132,.55);font-size:11px;letter-spacing:3px;margin-top:14px}
 
+/* ================= 超级小红（横版跳跃） ================= */
+.mario-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.mario-stage{position:relative;width:100%;padding:6px 10px 0}
+#marioCanvas{width:100%;display:block;border-radius:14px;background:#63a4ff;touch-action:none}
+.mario-ctl{flex:1;display:flex;align-items:center;justify-content:space-between;padding:4px 20px 16px}
+.mario-pad{display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:4px}
+.mkey{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;font-size:18px;touch-action:none}
+.mkey:active{background:rgba(255,255,255,.3)}
+.mkey.up{grid-area:1/2}.mkey.left{grid-area:2/1}.mkey.right{grid-area:2/3}.mkey.down{grid-area:3/2}
+.mario-ab{display:flex;align-items:center;gap:16px}
+.mbtn-col{display:flex;flex-direction:column;align-items:center;gap:5px}
+.mbtn-col span{font-size:12px;color:rgba(255,255,255,.6)}
+.mbtn{border-radius:50%;border:none;color:#fff;font-weight:800;touch-action:none;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.mbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.mbtn.b{width:54px;height:54px;background:#3a3a44;font-size:16px;margin-top:24px}
+.mbtn.a{width:72px;height:72px;background:#e33;font-size:22px}
+
 /* ================= 创始人页面 ================= */
 .founder-hero{
   display:flex;justify-content:center;align-items:flex-start;gap:38px;
@@ -754,6 +771,13 @@ body{
             <span style="font-size:20px;letter-spacing:-5px;margin-right:-5px">⚫⚪</span>
           </div>
           <div class="app-label">五子棋</div>
+        </div>
+
+        <div class="app" onclick="openMario()">
+          <div class="app-icon">
+            <span style="font-size:30px;filter:drop-shadow(0 0 6px rgba(255,120,80,.6))">🍄</span>
+          </div>
+          <div class="app-label">超级小红</div>
         </div>
       </div>
 
@@ -1169,6 +1193,39 @@ body{
       </div>
     </div>
 
+    <!-- ========== 超级小红（横版跳跃） ========== -->
+    <div class="level2" id="marioScreen" style="z-index:44">
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeMario()" aria-label="返回">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">超级小红</div>
+      </div>
+      <div class="mario-wrap">
+        <div class="mario-stage">
+          <canvas id="marioCanvas" width="768" height="480"></canvas>
+          <div class="snake-overlay" id="marioOverlay">
+            <div class="snake-ov-title" id="marioOvTitle">超级小红</div>
+            <div class="snake-ov-score" id="marioOvScore" style="display:none"></div>
+            <div class="snake-ov-sub" id="marioOvSub">◀ ▶ 移动 · A 跳跃 · B 加速<br>踩扁蘑菇怪 · 收集金币 · 抵达旗杆</div>
+            <button class="snake-ov-btn" id="marioOvBtn" onclick="marioStart()">开始游戏</button>
+          </div>
+        </div>
+        <div class="mario-ctl">
+          <div class="mario-pad">
+            <button class="mkey up" data-k="up">▲</button>
+            <button class="mkey left" data-k="left">◀</button>
+            <button class="mkey right" data-k="right">▶</button>
+            <button class="mkey down" data-k="down">▼</button>
+          </div>
+          <div class="mario-ab">
+            <div class="mbtn-col"><button class="mbtn b" data-k="run">B</button><span>加速</span></div>
+            <div class="mbtn-col"><button class="mbtn a" data-k="jump">A</button><span>跳跃</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ========== 创始人 ========== -->
     <div class="level2" id="founderScreen" style="z-index:46">
       <div class="setting-header">
@@ -1386,6 +1443,7 @@ function topLayer(){
   if(document.getElementById('userScreen').classList.contains('show')) return 'users';
   if(document.getElementById('founderScreen').classList.contains('show')) return 'founder';
   if(document.getElementById('gomokuScreen').classList.contains('show')) return 'gomoku';
+  if(document.getElementById('marioScreen').classList.contains('show')) return 'mario';
   if(document.getElementById('lifeScreen').classList.contains('show')) return 'life';
   if(document.getElementById('richScreen').classList.contains('show')) return 'rich';
   if(document.getElementById('snakeScreen').classList.contains('show')) return 'snake';
@@ -1400,6 +1458,7 @@ function backTop(){
     case 'users': closeUsers();break;
     case 'founder': closeFounder();break;
     case 'gomoku': closeGomoku();break;
+    case 'mario': closeMario();break;
     case 'life': closeLife();break;
     case 'rich': closeRich();break;
     case 'snake': closeSnake();break;
@@ -2379,6 +2438,350 @@ function gmkTap(e){
 })();
 window.addEventListener('resize',()=>{
   if(document.getElementById('gomokuScreen').classList.contains('show')){ gmkResize(); gmkDraw(); }
+});
+
+/* ========== 超级小红（横版跳跃） ========== */
+const M_TILE=32, M_VW=384, M_VH=240, M_GRAV=1700;
+const M_KEY='soloshow-mario-hi';
+let marioHi=+localStorage.getItem(M_KEY)||0;
+let mGame=null, mKeys={}, mRaf=0, mLastT=0, mCamX=0, mCamY=0;
+const M_KEYMAP={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'jump',ArrowDown:'down',a:'left',d:'right',w:'jump',s:'down',z:'jump',Z:'jump',x:'run',X:'run',Shift:'run',' ':'jump'};
+
+function marioLevel(){
+  const W=96,H=11;
+  const t=[]; for(let y=0;y<H;y++) t.push(new Array(W).fill('.'));
+  const set=(x,y,c)=>{ if(x>=0&&x<W&&y>=0&&y<H) t[y][x]=c; };
+  /* 地面（含沟壑） */
+  [[0,12],[16,12],[31,13],[48,15],[66,30]].forEach(([x,l])=>{
+    for(let i=0;i<l;i++){ set(x+i,9,'#'); set(x+i,10,'#'); }
+  });
+  /* 终点台阶 */
+  for(let i=0;i<5;i++) for(let j=0;j<=i;j++) set(80+i,8-j,'#');
+  /* 旗杆 */
+  for(let y=1;y<=8;y++) set(90,y,'F');
+  /* 砖块 / 问号 */
+  [[13,6],[15,6],[27,6],[28,6],[29,6],[57,7],[59,7],[60,7],[71,7],[72,7],[73,7]].forEach(([x,y])=>set(x,y,'B'));
+  [[14,6],[22,6],[30,6],[58,7]].forEach(([x,y])=>set(x,y,'?'));
+  /* 金币 */
+  const coins=[[9,5],[10,5],[11,5],[27,5],[28,5],[29,5],[44,6],[45,6],[46,6],[47,6],[63,6],[64,6],[65,6],[71,6],[72,6],[73,6],[86,6],[87,6],[88,6]]
+    .map(([x,y])=>({x:x*M_TILE+16,y:y*M_TILE+16,got:false,ph:Math.random()*6}));
+  /* 蘑菇怪 */
+  const enemies=[18,40,55,70,74].map(x=>({x:x*M_TILE,y:6*M_TILE,w:26,h:22,vx:-42,vy:0,dead:0,onG:false}));
+  return {t,W,H,coins,enemies};
+}
+function mSolid(t,x,y){
+  if(x<0||x>=t[0].length) return true;
+  if(y<0||y>=t.length) return false;
+  const c=t[y][x]; return c==='#'||c==='B'||c==='?'||c==='b';
+}
+function marioNewGame(state){
+  return {L:marioLevel(),state,px:2*M_TILE,py:7*M_TILE,pw:20,ph:26,vx:0,vy:0,face:1,
+    onG:false,coyote:0,jbuf:0,inv:0,anim:0,score:0,coins:0,lives:3,
+    respX:2*M_TILE,flagX:90*M_TILE,winT:0,pops:[]};
+}
+function marioResize(){
+  const cv=document.getElementById('marioCanvas');
+  const w=cv.parentElement.clientWidth; if(!w) return;
+  const dpr=window.devicePixelRatio||1, h=Math.round(w*0.625);
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+}
+function openMario(){
+  document.getElementById('marioScreen').classList.add('show');
+  mKeys={};
+  requestAnimationFrame(()=>{
+    marioResize();
+    if(!mGame||mGame.state!=='play'){
+      mGame=marioNewGame('ready');
+      mCamX=0; mCamY=Math.max(0,Math.min(mGame.py-150,mGame.L.H*M_TILE-M_VH));
+      marioDraw();
+      document.getElementById('marioOverlay').classList.remove('hide');
+      document.getElementById('marioOvSub').innerHTML=`◀ ▶ 移动 · A 跳跃 · B 加速<br>踩扁蘑菇怪 · 收集金币 · 抵达旗杆<br>最高分 ${marioHi}`;
+    }
+  });
+}
+function closeMario(){
+  cancelAnimationFrame(mRaf); mRaf=0; mKeys={};
+  document.getElementById('marioScreen').classList.remove('show');
+}
+function marioStart(){
+  mGame=marioNewGame('play');
+  document.getElementById('marioOverlay').classList.add('hide');
+  mLastT=performance.now();
+  cancelAnimationFrame(mRaf); mRaf=requestAnimationFrame(marioFrame);
+}
+function marioShowOv(kind){
+  const g=mGame;
+  marioHi=Math.max(marioHi,g.score); localStorage.setItem(M_KEY,marioHi);
+  document.getElementById('marioOvTitle').textContent=kind==='win'?'🏁 通关！':'游戏结束';
+  const sc=document.getElementById('marioOvScore');
+  sc.style.display='block'; sc.textContent=`得分 ${String(g.score).padStart(7,'0')} · 最高 ${marioHi}`;
+  document.getElementById('marioOvSub').innerHTML=`金币 ×${g.coins} · 剩余生命 ${Math.max(0,g.lives)}`;
+  document.getElementById('marioOvBtn').textContent='再来一局';
+  document.getElementById('marioOverlay').classList.remove('hide');
+}
+function marioHurt(){
+  const g=mGame; if(g.inv>0) return;
+  g.lives--;
+  if(g.lives<=0){ g.state='over'; marioShowOv('over'); return; }
+  g.px=g.respX; g.py=6*M_TILE; g.vx=0; g.vy=0; g.inv=1.5;
+}
+function marioFrame(t){
+  const dt=Math.min((t-mLastT)/1000,.05); mLastT=t;
+  marioUpdate(dt);
+  marioDraw();
+  mRaf=requestAnimationFrame(marioFrame);
+}
+function marioUpdate(dt){
+  const g=mGame; if(!g) return;
+  if(g.state==='win'){ g.winT-=dt; if(g.winT<=0) marioShowOv('win'); return; }
+  if(g.state!=='play') return;
+  const run=mKeys.run?212:132;
+  let ax=0;
+  if(mKeys.left){ax=-1;g.face=-1;}
+  if(mKeys.right){ax=1;g.face=1;}
+  if(ax!==0){
+    g.vx+=ax*1400*dt;
+    if(g.vx>run)g.vx=run; if(g.vx<-run)g.vx=-run;
+  }else{
+    const s=Math.sign(g.vx),m=Math.abs(g.vx)-1800*dt;
+    g.vx=m>0?s*m:0;
+  }
+  const jumpHeld=mKeys.jump||mKeys.up;
+  if(g.jbuf>0&&(g.onG||g.coyote>0)){ g.vy=-560; g.onG=false; g.coyote=0; g.jbuf=0; }
+  if(!jumpHeld&&g.vy<-200) g.vy=-200;           /* 松开跳跃=小跳 */
+  g.jbuf=Math.max(0,g.jbuf-dt); g.coyote=Math.max(0,g.coyote-dt);
+  g.vy+=M_GRAV*dt; if(g.vy>700)g.vy=700;
+  const L=g.L.t;
+  /* X 碰撞 */
+  g.px+=g.vx*dt;
+  const y0=Math.floor(g.py/M_TILE),y1=Math.floor((g.py+g.ph-1)/M_TILE);
+  if(g.vx>0){
+    const x1=Math.floor((g.px+g.pw)/M_TILE);
+    for(let y=y0;y<=y1;y++) if(mSolid(L,x1,y)){ g.px=x1*M_TILE-g.pw-0.01; g.vx=0; break; }
+  }else if(g.vx<0){
+    const x0=Math.floor(g.px/M_TILE);
+    for(let y=y0;y<=y1;y++) if(mSolid(L,x0,y)){ g.px=(x0+1)*M_TILE+0.01; g.vx=0; break; }
+  }
+  if(g.px<0) g.px=0;
+  /* Y 碰撞 + 顶问号砖 */
+  g.py+=g.vy*dt; g.onG=false;
+  const xx0=Math.floor((g.px+1)/M_TILE),xx1=Math.floor((g.px+g.pw-1)/M_TILE);
+  if(g.vy>0){
+    const yy=Math.floor((g.py+g.ph)/M_TILE);
+    for(let x=xx0;x<=xx1;x++) if(mSolid(L,x,yy)){ g.py=yy*M_TILE-g.ph-0.01; g.vy=0; g.onG=true; g.coyote=.08; break; }
+  }else if(g.vy<0){
+    const yy=Math.floor(g.py/M_TILE);
+    for(let x=xx0;x<=xx1;x++) if(mSolid(L,x,yy)){
+      g.py=(yy+1)*M_TILE+0.01; g.vy=0;
+      if(L[yy][x]==='?'){ L[yy][x]='b'; g.coins++; g.score+=100; g.pops.push({x:x*M_TILE+16,y:yy*M_TILE,t:.45}); }
+      break;
+    }
+  }
+  /* 金币 */
+  g.L.coins.forEach(c=>{
+    if(!c.got&&Math.abs(g.px+g.pw/2-c.x)<18&&Math.abs(g.py+g.ph/2-c.y)<20){
+      c.got=true; g.coins++; g.score+=100;
+    }
+  });
+  g.pops.forEach(p=>p.t-=dt); g.pops=g.pops.filter(p=>p.t>0);
+  /* 蘑菇怪 */
+  g.L.enemies.forEach(e=>{
+    if(e.dead>0){ e.dead-=dt; return; }
+    e.vy+=M_GRAV*dt; if(e.vy>700)e.vy=700;
+    e.x+=e.vx*dt;
+    const ex=e.vx<0?Math.floor(e.x/M_TILE):Math.floor((e.x+e.w)/M_TILE);
+    const ey0=Math.floor(e.y/M_TILE),ey1=Math.floor((e.y+e.h-1)/M_TILE);
+    for(let y=ey0;y<=ey1;y++) if(mSolid(L,ex,y)){ e.vx=-e.vx; e.x+=e.vx*dt*2; break; }
+    e.y+=e.vy*dt; e.onG=false;
+    const fy=Math.floor((e.y+e.h)/M_TILE);
+    if(e.vy>=0){
+      const fx0=Math.floor((e.x+1)/M_TILE),fx1=Math.floor((e.x+e.w-1)/M_TILE);
+      for(let x=fx0;x<=fx1;x++) if(mSolid(L,x,fy)){ e.y=fy*M_TILE-e.h-0.01; e.vy=0; e.onG=true; break; }
+    }
+    if(e.onG){ /* 到边缘掉头，不落坑 */
+      const aheadX=e.vx<0?Math.floor((e.x-2)/M_TILE):Math.floor((e.x+e.w+2)/M_TILE);
+      const belowY=Math.floor((e.y+e.h+2)/M_TILE);
+      if(!mSolid(L,aheadX,belowY)) e.vx=-e.vx;
+    }
+    if(e.y>g.L.H*M_TILE+60){ e.dead=0.01; e.x=-999; return; }
+    /* 与玩家碰撞：下落踩头=击杀，否则受伤 */
+    if(g.inv<=0&&g.state==='play'&&
+       Math.abs(g.px+g.pw/2-(e.x+e.w/2))<(g.pw+e.w)/2-4&&
+       Math.abs(g.py+g.ph/2-(e.y+e.h/2))<(g.ph+e.h)/2-4){
+      if(g.vy>0&&(g.py+g.ph)-e.y<14){ e.dead=0.35; g.vy=-340; g.score+=200; }
+      else marioHurt();
+    }
+  });
+  /* 检查点 / 坠坑 / 旗杆 */
+  if(g.px>48*M_TILE&&g.respX<48*M_TILE) g.respX=49*M_TILE;
+  if(g.px>66*M_TILE&&g.respX<66*M_TILE) g.respX=67*M_TILE;
+  if(g.py>g.L.H*M_TILE+40) marioHurt();
+  if(g.state==='play'&&g.px+g.pw>=g.flagX+10){ g.state='win'; g.score+=500; g.winT=1.0; }
+  if(g.inv>0) g.inv-=dt;
+  g.anim+=Math.abs(g.vx)*dt;
+  mCamX=Math.max(0,Math.min(g.px-150,g.L.W*M_TILE-M_VW));
+  mCamY=Math.max(0,Math.min(g.py-150,g.L.H*M_TILE-M_VH));
+}
+function marioDraw(){
+  const cv=document.getElementById('marioCanvas'); if(!cv.width||!mGame) return;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(cv.width/M_VW,0,0,cv.height/M_VH,0,0);
+  const g=mGame, now=performance.now()/1000;
+  /* 天空 */
+  const sky=ctx.createLinearGradient(0,0,0,M_VH);
+  sky.addColorStop(0,'#4a8fff'); sky.addColorStop(1,'#bfe3ff');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,M_VW,M_VH);
+  /* 云（视差） */
+  ctx.fillStyle='rgba(255,255,255,.92)';
+  [[120,42],[600,26],[1100,52],[1700,30],[2300,46],[2800,36]].forEach(([cx,cy])=>{
+    const sx=cx-mCamX*.35, sy=cy-mCamY*.35;
+    if(sx<-70||sx>M_VW+70) return;
+    ctx.beginPath();
+    ctx.arc(sx,sy,12,0,7); ctx.arc(sx+14,sy-6,14,0,7); ctx.arc(sx+28,sy,11,0,7);
+    ctx.fill();
+  });
+  /* 远山（视差） */
+  ctx.fillStyle='#6fce6a';
+  [[200],[900],[1600],[2400],[2900]].forEach(([hx])=>{
+    const sx=hx-mCamX*.6, gy=9*M_TILE-mCamY*.9;
+    if(sx<-160||sx>M_VW+160) return;
+    ctx.beginPath(); ctx.ellipse(sx,gy,110,60,0,Math.PI,0); ctx.fill();
+  });
+  /* 地块 */
+  const L=g.L.t;
+  const tx0=Math.max(0,Math.floor(mCamX/M_TILE)),tx1=Math.min(g.L.W-1,Math.ceil((mCamX+M_VW)/M_TILE));
+  const ty0=Math.max(0,Math.floor(mCamY/M_TILE)),ty1=Math.min(g.L.H-1,Math.ceil((mCamY+M_VH)/M_TILE));
+  for(let y=ty0;y<=ty1;y++) for(let x=tx0;x<=tx1;x++){
+    const c=L[y][x]; if(c==='.') continue;
+    const sx=x*M_TILE-mCamX, sy=y*M_TILE-mCamY;
+    if(c==='#'){
+      ctx.fillStyle='#9a6a44'; ctx.fillRect(sx,sy,M_TILE,M_TILE);
+      ctx.strokeStyle='rgba(90,55,30,.5)'; ctx.lineWidth=1;
+      ctx.strokeRect(sx+3,sy+8,10,6); ctx.strokeRect(sx+18,sy+20,10,6);
+      if(!mSolid(L,x,y-1)){ ctx.fillStyle='#57c14d'; ctx.fillRect(sx,sy,M_TILE,8); }
+    }else if(c==='B'||c==='b'){
+      ctx.fillStyle=c==='B'?'#c96f32':'#7a5a40'; ctx.fillRect(sx,sy,M_TILE,M_TILE);
+      ctx.strokeStyle='rgba(70,35,10,.6)';
+      ctx.strokeRect(sx+.5,sy+.5,M_TILE-1,M_TILE-1);
+      ctx.beginPath(); ctx.moveTo(sx,sy+16); ctx.lineTo(sx+M_TILE,sy+16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx+16,sy); ctx.lineTo(sx+16,sy+16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx+8,sy+16); ctx.lineTo(sx+8,sy+32); ctx.moveTo(sx+24,sy+16); ctx.lineTo(sx+24,sy+32); ctx.stroke();
+    }else if(c==='?'){
+      const pulse=1+Math.sin(now*4)*.06;
+      ctx.fillStyle='#f5b52e'; ctx.fillRect(sx,sy,M_TILE,M_TILE);
+      ctx.strokeStyle='#8a5a10'; ctx.strokeRect(sx+.5,sy+.5,M_TILE-1,M_TILE-1);
+      ctx.fillStyle='#7a4a08'; ctx.font=`bold ${Math.round(18*pulse)}px sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('?',sx+16,sy+17); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    }else if(c==='F'){
+      ctx.fillStyle='#2f9e3e'; ctx.fillRect(sx+13,sy,6,M_TILE);
+      if(y===1){ /* 旗顶 */
+        ctx.fillStyle='#ffd54a'; ctx.beginPath(); ctx.arc(sx+16,sy+4,5,0,7); ctx.fill();
+        ctx.fillStyle='#e33'; ctx.beginPath();
+        ctx.moveTo(sx+13,sy+6); ctx.lineTo(sx-13,sy+14); ctx.lineTo(sx+13,sy+22); ctx.fill();
+      }
+    }
+  }
+  /* 金币 */
+  g.L.coins.forEach(c=>{
+    if(c.got) return;
+    const sx=c.x-mCamX, sy=c.y-mCamY;
+    if(sx<-20||sx>M_VW+20) return;
+    const w=Math.abs(Math.cos(now*4+c.ph));
+    ctx.fillStyle='#ffd54a'; ctx.strokeStyle='#b8860b'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(sx,sy,Math.max(2,8*w),9,0,0,7); ctx.fill(); ctx.stroke();
+  });
+  /* 顶砖跳出的金币 */
+  g.pops.forEach(p=>{
+    const sx=p.x-mCamX, sy=p.y-mCamY-(0.45-p.t)*60;
+    ctx.globalAlpha=Math.max(0,p.t/0.45);
+    ctx.fillStyle='#ffd54a'; ctx.beginPath(); ctx.arc(sx,sy,7,0,7); ctx.fill();
+    ctx.globalAlpha=1;
+  });
+  /* 蘑菇怪 */
+  g.L.enemies.forEach(e=>{
+    if(e.dead>0){
+      const sx=e.x-mCamX, sy=e.y-mCamY;
+      ctx.globalAlpha=Math.max(0,e.dead/0.35);
+      ctx.fillStyle='#b36a2e'; ctx.beginPath(); ctx.ellipse(sx+13,sy+e.h-4,13,5,0,0,7); ctx.fill();
+      ctx.globalAlpha=1; return;
+    }
+    const sx=e.x-mCamX, sy=e.y-mCamY;
+    if(sx<-40||sx>M_VW+40) return;
+    const step=Math.floor(now*8)%2;
+    ctx.fillStyle='#5a3418'; /* 脚 */
+    ctx.fillRect(sx+3,sy+e.h-5+(step?0:2),8,5);
+    ctx.fillRect(sx+15,sy+e.h-5+(step?2:0),8,5);
+    ctx.fillStyle='#f0d0a8'; ctx.fillRect(sx+5,sy+11,16,8); /* 脸 */
+    ctx.fillStyle='#b36a2e'; /* 蘑菇帽 */
+    ctx.beginPath(); ctx.ellipse(sx+13,sy+9,13,9,0,Math.PI,0); ctx.fill();
+    ctx.fillRect(sx,sy+9,26,4);
+    ctx.fillStyle='#3a2410'; /* 眼睛 */
+    ctx.fillRect(sx+8,sy+13,3,4); ctx.fillRect(sx+15,sy+13,3,4);
+  });
+  /* 小红（红帽主角） */
+  if(g.inv>0&&Math.floor(now*10)%2===0){ /* 受伤闪烁 */ }else{
+    const sx=g.px-mCamX, sy=g.py-mCamY;
+    const run=g.onG&&Math.abs(g.vx)>10, fr=run?Math.floor(g.anim/14)%2:0;
+    const air=!g.onG;
+    ctx.save();
+    if(g.face<0){ ctx.translate(sx+g.pw/2,0); ctx.scale(-1,1); ctx.translate(-(sx+g.pw/2),0); }
+    ctx.fillStyle='#e33'; /* 帽子 */
+    ctx.fillRect(sx+2,sy,16,6); ctx.fillRect(sx+2,sy+4,19,4);
+    ctx.fillStyle='#ffd9b3'; /* 脸 */
+    ctx.fillRect(sx+4,sy+8,13,6);
+    ctx.fillStyle='#222'; /* 眼睛 */
+    ctx.fillRect(sx+13,sy+9,2,3);
+    ctx.fillStyle='#3b6fd4'; /* 身体 */
+    ctx.fillRect(sx+4,sy+14,12,7);
+    ctx.fillStyle='#7a4a1d'; /* 腿/鞋 */
+    if(air){ ctx.fillRect(sx+4,sy+21,5,4); ctx.fillRect(sx+11,sy+22,5,4); }
+    else if(run){ ctx.fillRect(sx+4,sy+21+(fr?0:2),5,5-(fr?0:2)); ctx.fillRect(sx+11,sy+21+(fr?2:0),5,5-(fr?2:0)); }
+    else{ ctx.fillRect(sx+4,sy+21,5,5); ctx.fillRect(sx+11,sy+21,5,5); }
+    ctx.restore();
+  }
+  /* HUD：左上 分数/金币，右上 生命 */
+  ctx.fillStyle='rgba(8,20,40,.72)';
+  ctx.beginPath(); ctx.roundRect?ctx.roundRect(8,8,152,38,8):ctx.rect(8,8,152,38); ctx.fill();
+  ctx.strokeStyle='#ffd54a'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#ffd54a'; ctx.font='bold 10px sans-serif';
+  ctx.fillText('分数',16,22);
+  ctx.font='bold 15px monospace'; ctx.fillText(String(g.score).padStart(7,'0'),16,40);
+  ctx.beginPath(); ctx.arc(112,30,6,0,7); ctx.fillStyle='#ffd54a'; ctx.fill();
+  ctx.strokeStyle='#b8860b'; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif'; ctx.fillText('× '+g.coins,122,34);
+  ctx.fillStyle='rgba(8,20,40,.72)';
+  ctx.beginPath(); ctx.roundRect?ctx.roundRect(M_VW-96,8,88,26,8):ctx.rect(M_VW-96,8,88,26); ctx.fill();
+  ctx.strokeStyle='#ff6b5a'; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('生命 ×'+Math.max(0,g.lives),M_VW-82,25);
+}
+/* 手柄按钮绑定（支持多点触控：方向+跳跃同时按） */
+document.querySelectorAll('#marioScreen [data-k]').forEach(b=>{
+  const k=b.dataset.k;
+  const on=e=>{ e.preventDefault(); e.stopPropagation();
+    if(k==='jump'&&!mKeys.jump&&mGame) mGame.jbuf=.12;
+    mKeys[k]=true;
+  };
+  const off=e=>{ e.preventDefault(); e.stopPropagation(); mKeys[k]=false; };
+  b.addEventListener('pointerdown',on);
+  b.addEventListener('pointerup',off);
+  b.addEventListener('pointercancel',off);
+  b.addEventListener('pointerleave',off);
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+});
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('marioScreen').classList.contains('show')) return;
+  const m=M_KEYMAP[e.key]; if(!m) return;
+  e.preventDefault();
+  if(m==='jump'&&!mKeys.jump&&mGame) mGame.jbuf=.12;
+  mKeys[m]=true;
+});
+document.addEventListener('keyup',e=>{
+  const m=M_KEYMAP[e.key]; if(m) mKeys[m]=false;
+});
+window.addEventListener('resize',()=>{
+  if(document.getElementById('marioScreen').classList.contains('show')){ marioResize(); marioDraw(); }
 });
 
 /* ========== 初始化 ========== */

@@ -1,7 +1,7 @@
 {
   "name": "SoloShow 游戏盒子",
   "short_name": "SoloShow",
-  "description": "SoloShow Phone：摇杆贪吃蛇 · 世界首富模拟器 · 人生模拟器 · AI五子棋",
+  "description": "SoloShow Phone：摇杆贪吃蛇 · 世界首富模拟器 · 人生模拟器 · AI五子棋 · 超级小红",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
