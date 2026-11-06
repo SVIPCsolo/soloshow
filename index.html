@@ -2547,8 +2547,8 @@ function marioUpdate(dt){
     g.vx=m>0?s*m:0;
   }
   const jumpHeld=mKeys.jump||mKeys.up;
-  if(g.jbuf>0&&(g.onG||g.coyote>0)){ g.vy=-560; g.onG=false; g.coyote=0; g.jbuf=0; }
-  if(!jumpHeld&&g.vy<-200) g.vy=-200;           /* 松开跳跃=小跳 */
+  if(g.jbuf>0&&(g.onG||g.coyote>0)){ g.vy=-640; g.onG=false; g.coyote=0; g.jbuf=0; }
+  if(!jumpHeld&&g.vy<-260) g.vy=-260;           /* 松开跳跃=小跳 */
   g.jbuf=Math.max(0,g.jbuf-dt); g.coyote=Math.max(0,g.coyote-dt);
   g.vy+=M_GRAV*dt; if(g.vy>700)g.vy=700;
   const L=g.L.t;
