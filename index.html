@@ -338,6 +338,113 @@ body{
 /* 动画类 */
 .fade-in{animation:fadeIn .5s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ================= 通用二级页面 ================= */
+.level2{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,#0e1018,#05060a);
+  padding-top:50px;padding-bottom:30px;
+  transform:translateX(100%);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  display:flex;flex-direction:column;
+  z-index:40;
+}
+.level2.show{transform:translateX(0)}
+.level2-content{flex:1;overflow-y:auto;padding:0 18px}
+.level2-content::-webkit-scrollbar{width:0}
+
+/* 右侧值 */
+.value-txt{font-size:12px;color:#6b7289;margin-right:4px;max-width:50%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 单选列表 */
+.radio-group{margin-top:6px}
+.radio-item{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 14px;cursor:pointer;position:relative;
+  transition:background .15s,color .15s;
+}
+.radio-item:active{background:rgba(255,255,255,.06)}
+.radio-item + .radio-item::before{
+  content:'';position:absolute;left:14px;right:44px;top:0;height:1px;
+  background:rgba(255,255,255,.05);
+}
+.radio-item .radio-main{flex:1}
+.radio-item .radio-title{font-size:14px;color:#e6e8f0;font-weight:500}
+.radio-item .radio-desc{font-size:11px;color:#6b7289;margin-top:3px;line-height:1.5}
+.radio-check{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid #3a4058;
+  display:grid;place-items:center;transition:all .2s;
+}
+.radio-item.active .radio-check{
+  border-color:#00e5ff;
+  background:radial-gradient(circle at center,#00e5ff 0 40%,transparent 41%);
+  box-shadow:0 0 12px rgba(0,229,255,.5);
+}
+.radio-item.active .radio-title{color:#00e5ff}
+
+/* 刷新率卡片预览 */
+.refresh-cards{
+  display:flex;gap:12px;padding:4px 0 8px;
+}
+.refresh-card{
+  flex:1;border-radius:16px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(145deg,#1a1d2a,#12141c);
+  cursor:pointer;transition:transform .15s,border-color .2s;
+}
+.refresh-card:active{transform:scale(.97)}
+.refresh-card.active{border-color:#00e5ff;box-shadow:0 0 16px rgba(0,229,255,.25)}
+.refresh-preview{
+  aspect-ratio:9/19;background:linear-gradient(160deg,#1e2536,#131621);
+  display:flex;flex-direction:column;gap:6px;padding:14px 12px;
+  position:relative;overflow:hidden;
+}
+.refresh-preview::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,229,255,.1),transparent 60%);
+}
+.refresh-preview .rbar{height:6px;border-radius:3px;background:rgba(255,255,255,.15)}
+.refresh-preview .rbar.short{width:55%}
+.refresh-preview .rbar.mid{width:75%}
+.refresh-preview .rbar.long{width:90%}
+.refresh-preview .rdots{display:flex;gap:4px;margin-top:8px}
+.refresh-preview .rdots span{width:10px;height:10px;border-radius:3px;background:rgba(255,255,255,.18)}
+.refresh-label{
+  text-align:center;font-size:12px;color:#c4c8d6;padding:10px 6px;letter-spacing:2px;
+}
+
+/* 刷新率数值网格（手动档位） */
+.hz-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px;
+}
+.hz-chip{
+  padding:14px 6px;border-radius:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;
+}
+.hz-chip:active{transform:scale(.95)}
+.hz-chip .hz-num{font-size:18px;font-weight:800;font-family:'Courier New',monospace;color:#e6e8f0}
+.hz-chip .hz-unit{font-size:10px;color:#6b7289;margin-top:2px;letter-spacing:1px}
+.hz-chip.active{
+  border-color:#00e5ff;
+  background:linear-gradient(145deg,rgba(0,229,255,.18),rgba(124,77,255,.12));
+  box-shadow:0 0 18px rgba(0,229,255,.3);
+}
+.hz-chip.active .hz-num{color:#00e5ff;text-shadow:0 0 10px rgba(0,229,255,.6)}
+
+/* 成功 toast */
+.toast{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.35);
+  color:#00e5ff;padding:10px 20px;border-radius:24px;font-size:12px;letter-spacing:2px;
+  box-shadow:0 0 24px rgba(0,229,255,.3);z-index:100;
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
 </style>
 </head>
 <body>
@@ -455,11 +562,12 @@ body{
 
         <div class="group-title">显示</div>
         <div class="group">
-          <div class="item">
+          <div class="item" onclick="openDisplay()">
             <div class="item-icon purple">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/></svg>
             </div>
             <div class="item-text">显示与亮度</div>
+            <div class="value-txt" id="setRefreshVal">120 Hz</div>
             <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
           </div>
           <div class="item">
@@ -552,12 +660,183 @@ body{
       </div>
     </div>
 
+    <!-- ========== 显示与亮度 ========== -->
+    <div class="level2" id="displayScreen">
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeDisplay()">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">显示与亮度</div>
+      </div>
+      <div class="level2-content">
+        <div class="group-title">显示效果</div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">字体</div>
+            <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+          </div>
+          <div class="item">
+            <div class="item-text">显示大小</div>
+            <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+          </div>
+        </div>
+
+        <div class="group-title">屏幕</div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">屏幕分辨率</div>
+            <div class="value-txt">1440P WQHD+</div>
+            <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+          </div>
+          <div class="item" onclick="openRefresh()">
+            <div class="item-text">屏幕刷新率</div>
+            <div class="value-txt" id="displayRefreshVal">120 Hz</div>
+            <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+          </div>
+        </div>
+
+        <div class="group-title">屏幕控制</div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">自动旋转</div>
+            <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+          </div>
+          <div class="item">
+            <div class="item-text">自动息屏</div>
+            <div class="value-txt">30 秒</div>
+            <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+          </div>
+        </div>
+
+        <div style="height:40px"></div>
+      </div>
+    </div>
+
+    <!-- ========== 屏幕刷新率 ========== -->
+    <div class="level2" id="refreshScreen">
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeRefresh()">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">屏幕刷新率</div>
+      </div>
+      <div class="level2-content">
+        <!-- 对比卡片 -->
+        <div class="refresh-cards fade-in">
+          <div class="refresh-card" onclick="setRefresh(60)" data-preset="std">
+            <div class="refresh-preview">
+              <div class="rbar"></div>
+              <div class="rbar mid"></div>
+              <div class="rbar short"></div>
+              <div class="rbar long"></div>
+              <div class="rbar mid"></div>
+              <div class="rdots"><span></span><span></span><span></span><span></span></div>
+            </div>
+            <div class="refresh-label">标准 60Hz</div>
+          </div>
+          <div class="refresh-card" onclick="setRefresh(144)" data-preset="high">
+            <div class="refresh-preview" style="gap:4px;padding:10px 10px">
+              <div class="rbar" style="height:4px"></div>
+              <div class="rbar mid" style="height:4px"></div>
+              <div class="rbar short" style="height:4px"></div>
+              <div class="rbar long" style="height:4px"></div>
+              <div class="rbar mid" style="height:4px"></div>
+              <div class="rbar" style="height:4px"></div>
+              <div class="rbar mid" style="height:4px"></div>
+              <div class="rdots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            </div>
+            <div class="refresh-label">高刷 144Hz</div>
+          </div>
+        </div>
+
+        <div class="group-title">手动选择</div>
+        <div class="hz-grid" id="hzGrid"></div>
+
+        <div class="group-title">说明</div>
+        <div class="group" style="padding:14px">
+          <div style="font-size:12px;color:#8a91a6;line-height:1.7">
+            · 刷新率越高，画面和操作越流畅，视觉体验更丝滑<br>
+            · 较高刷新率会增加功耗与轻微发热<br>
+            · 系统刷新率上限取决于屏幕硬件能力<br>
+            · 当前选择：<span style="color:#00e5ff;font-family:'Courier New',monospace" id="curRefreshText">120 Hz</span>
+          </div>
+        </div>
+
+        <div style="height:40px"></div>
+      </div>
+    </div>
+
     <!-- 底部手势条 -->
     <div class="gesture"></div>
   </div>
 </div>
 
 <script>
+/* ========== 刷新率状态 ========== */
+const REFRESH_OPTIONS=[30,60,90,120,144,165,185,240,360];
+const LS_REFRESH='soloshow-refresh';
+let currentRefresh=parseInt(localStorage.getItem(LS_REFRESH)||'120');
+
+/* 渲染刷新率档位网格 */
+function renderHzGrid(){
+  const g=document.getElementById('hzGrid');
+  g.innerHTML='';
+  REFRESH_OPTIONS.forEach(hz=>{
+    const chip=document.createElement('div');
+    chip.className='hz-chip'+(hz===currentRefresh?' active':'');
+    chip.innerHTML=`<div class="hz-num">${hz}</div><div class="hz-unit">Hz</div>`;
+    chip.onclick=()=>setRefresh(hz);
+    g.appendChild(chip);
+  });
+}
+
+/* 同步所有位置显示的当前刷新率 */
+function syncRefreshUI(){
+  const val=currentRefresh+' Hz';
+  ['setRefreshVal','displayRefreshVal','curRefreshText'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.textContent=val;
+  });
+  // 预设卡片
+  document.querySelectorAll('.refresh-card').forEach(c=>{
+    const p=c.dataset.preset;
+    const hz=parseInt(c.querySelector('.refresh-label').textContent.match(/\d+/)[0]);
+    const label=c.querySelector('.refresh-label');
+    if(p==='std'){
+      c.classList.toggle('active',currentRefresh===hz);
+    }else if(p==='high'){
+      c.classList.toggle('active',currentRefresh===hz);
+    }
+  });
+  // hz-chip
+  document.querySelectorAll('.hz-chip').forEach(c=>{
+    const hz=parseInt(c.querySelector('.hz-num').textContent);
+    c.classList.toggle('active',hz===currentRefresh);
+  });
+}
+
+/* 设置刷新率 */
+function setRefresh(hz){
+  currentRefresh=hz;
+  localStorage.setItem(LS_REFRESH,hz);
+  syncRefreshUI();
+  toast('已切换为 '+hz+' Hz');
+}
+
+/* Toast */
+let toastTimer;
+function toast(msg){
+  let t=document.getElementById('__toast');
+  if(!t){
+    t=document.createElement('div');
+    t.className='toast';t.id='__toast';
+    document.querySelector('.phone .screen').appendChild(t);
+  }
+  t.textContent=msg;
+  clearTimeout(toastTimer);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  toastTimer=setTimeout(()=>t.classList.remove('show'),1400);
+}
+
 /* ========== 开机流程 ========== */
 (function boot(){
   const fill=document.getElementById('bootFill');
@@ -595,9 +874,7 @@ setInterval(updateTime,1000*30);
 (function battery(){
   let lvl=82;
   const el=document.getElementById('batteryFill');
-  function draw(){
-    el.style.width=lvl+'%';
-  }
+  function draw(){el.style.width=lvl+'%'}
   draw();
   setInterval(()=>{
     lvl=Math.max(5,lvl-(Math.random()<.15?1:0));
@@ -606,11 +883,16 @@ setInterval(updateTime,1000*30);
 })();
 
 /* ========== 页面切换 ========== */
+/* 层级：home → settings → display → refresh  （每层 z-index 叠加）*/
+function openHome(){
+  closeSettings();
+}
 function openSettings(){
   document.getElementById('homeScreen').classList.add('hide');
   document.getElementById('settingsScreen').classList.add('show');
 }
 function closeSettings(){
+  closeDisplay();
   document.getElementById('settingsScreen').classList.remove('show');
   document.getElementById('homeScreen').classList.remove('hide');
 }
@@ -620,18 +902,46 @@ function openAbout(){
 function closeAbout(){
   document.getElementById('aboutScreen').classList.remove('show');
 }
+function openDisplay(){
+  syncRefreshUI();
+  document.getElementById('displayScreen').classList.add('show');
+}
+function closeDisplay(){
+  closeRefresh();
+  document.getElementById('displayScreen').classList.remove('show');
+}
+function openRefresh(){
+  renderHzGrid();
+  syncRefreshUI();
+  document.getElementById('refreshScreen').classList.add('show');
+}
+function closeRefresh(){
+  document.getElementById('refreshScreen').classList.remove('show');
+}
 
-/* 手势条：下滑关设置，返回桌面 */
+/* 获取当前最深（已打开）的层 id */
+function topLayer(){
+  if(document.getElementById('refreshScreen').classList.contains('show')) return 'refresh';
+  if(document.getElementById('displayScreen').classList.contains('show')) return 'display';
+  if(document.getElementById('aboutScreen').classList.contains('show')) return 'about';
+  if(document.getElementById('settingsScreen').classList.contains('show')) return 'settings';
+  return 'home';
+}
+function backTop(){
+  switch(topLayer()){
+    case 'refresh': closeRefresh();break;
+    case 'display': closeDisplay();break;
+    case 'about': closeAbout();break;
+    case 'settings': closeSettings();break;
+  }
+}
+
+/* 手势条：下滑逐层返回 */
 let startY=0;
-const phones=document.querySelectorAll('.screen');
-let curScreen='home';
 function touchStart(e){startY=e.touches[0].clientY}
 function touchEnd(e){
   const dy=e.changedTouches[0].clientY-startY;
-  if(dy>80){
-    if(document.getElementById('aboutScreen').classList.contains('show')) closeAbout();
-    else if(document.getElementById('settingsScreen').classList.contains('show')) closeSettings();
-  }
+  if(dy>80) backTop();
 }
 document.querySelectorAll('.screen').forEach(s=>{
   s.addEventListener('touchstart',touchStart,{passive:true});
@@ -640,11 +950,12 @@ document.querySelectorAll('.screen').forEach(s=>{
 
 /* ESC 返回键 */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    if(document.getElementById('aboutScreen').classList.contains('show')) closeAbout();
-    else if(document.getElementById('settingsScreen').classList.contains('show')) closeSettings();
-  }
+  if(e.key==='Escape') backTop();
 });
+
+/* 初始化 */
+renderHzGrid();
+syncRefreshUI();
 </script>
 </body>
 </html>
