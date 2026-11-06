@@ -533,6 +533,34 @@ body{
 }
 .snake-pause-btn:active{transform:scale(.9);background:rgba(74,222,128,.18)}
 
+/* ================= 世界首富模拟器 ================= */
+#richParticles{position:absolute;inset:0;z-index:0;pointer-events:none}
+#richScreen .setting-header,#richScreen .rich-money-box,#richScreen .rich-shop{position:relative;z-index:1}
+.rich-stats{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:10px;color:#6b7289;letter-spacing:1px}
+.rich-stats b{color:#ffd166;font-family:'Courier New',monospace;font-size:12.5px;font-weight:700}
+.rich-money-box{padding:4px 18px 14px;text-align:center}
+.rich-money{font-family:'Courier New',monospace;font-size:34px;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,#ffd166,#4ade80);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rich-money.pulse{animation:richPulse .35s ease}
+@keyframes richPulse{40%{transform:scale(1.07)}}
+.rich-money-sub{font-size:10px;color:#6b7289;letter-spacing:4px;margin-top:3px}
+.rich-shop{padding-bottom:10px}
+.rich-cat{margin:14px 0 8px;font-size:12px;color:#ffd166;letter-spacing:3px;display:flex;align-items:center;gap:10px}
+.rich-cat::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,209,102,.35),transparent)}
+.rich-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06);margin-bottom:10px}
+.rich-emoji{font-size:25px;width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:12px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.18)}
+.rich-info{flex:1;min-width:0}
+.rich-name{font-size:13px;font-weight:600;color:#e8eaf2;display:flex;align-items:center;gap:6px}
+.rich-owned{font-size:10px;color:#ffd166;background:rgba(255,209,102,.12);padding:1px 7px;border-radius:99px;font-family:'Courier New',monospace}
+.rich-meta{font-size:10.5px;color:#4ade80;margin-top:4px;font-family:'Courier New',monospace}
+.rich-buy{flex:none;border:none;cursor:pointer;padding:10px 13px;border-radius:12px;font-size:12px;font-weight:800;font-family:'Courier New',monospace;color:#231a05;background:linear-gradient(135deg,#ffd166,#ffb340);box-shadow:0 4px 16px rgba(255,183,64,.3);transition:transform .08s,filter .2s;white-space:nowrap}
+.rich-buy:active{transform:scale(.93)}
+.rich-buy.cant{filter:grayscale(.7) brightness(.55)}
+.rich-toast{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);z-index:9;pointer-events:none;opacity:0;min-width:200px;max-width:80%;text-align:center;padding:16px 22px;border-radius:16px;background:rgba(10,14,10,.92);border:1px solid rgba(255,209,102,.4);box-shadow:0 10px 40px rgba(0,0,0,.6),0 0 30px rgba(255,209,102,.12);font-size:12px;color:#c4c8d6;line-height:1.7}
+.rich-toast b{display:block;font-size:16px;color:#ffd166;margin-top:4px}
+.rich-toast span{display:block;font-size:11px;color:#4ade80;margin-top:4px;font-family:'Courier New',monospace}
+.rich-toast.pop{animation:richToastPop 1.3s ease forwards}
+@keyframes richToastPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(.98)}}
+
 /* ================= 创始人页面 ================= */
 .founder-hero{
   display:flex;flex-direction:column;align-items:center;
@@ -642,6 +670,13 @@ body{
             </svg>
           </div>
           <div class="app-label">贪吃蛇</div>
+        </div>
+
+        <div class="app" onclick="openRich()">
+          <div class="app-icon">
+            <span style="font-size:30px;filter:drop-shadow(0 0 6px rgba(255,209,102,.6))">💰</span>
+          </div>
+          <div class="app-label">首富模拟器</div>
         </div>
       </div>
 
@@ -994,6 +1029,27 @@ body{
       </div>
     </div>
 
+    <!-- ========== 世界首富模拟器 ========== -->
+    <div class="level2" id="richScreen" style="z-index:47">
+      <canvas id="richParticles"></canvas>
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeRich()" aria-label="返回">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">世界首富模拟器</div>
+        <div class="rich-stats">
+          <span>总资产 <b id="richTotal">--</b></span>
+          <span><b id="richRate">--</b>/秒</span>
+        </div>
+      </div>
+      <div class="rich-money-box">
+        <div class="rich-money" id="richMoney">¥--</div>
+        <div class="rich-money-sub">现 金 余 额</div>
+      </div>
+      <div class="level2-content rich-shop" id="richShop"></div>
+      <div class="rich-toast" id="richToast"></div>
+    </div>
+
     <!-- ========== 创始人 ========== -->
     <div class="level2" id="founderScreen" style="z-index:46">
       <div class="setting-header">
@@ -1203,6 +1259,7 @@ function closeRefresh(){
 function topLayer(){
   if(document.getElementById('userScreen').classList.contains('show')) return 'users';
   if(document.getElementById('founderScreen').classList.contains('show')) return 'founder';
+  if(document.getElementById('richScreen').classList.contains('show')) return 'rich';
   if(document.getElementById('snakeScreen').classList.contains('show')) return 'snake';
   if(document.getElementById('refreshScreen').classList.contains('show')) return 'refresh';
   if(document.getElementById('displayScreen').classList.contains('show')) return 'display';
@@ -1214,6 +1271,7 @@ function backTop(){
   switch(topLayer()){
     case 'users': closeUsers();break;
     case 'founder': closeFounder();break;
+    case 'rich': closeRich();break;
     case 'snake': closeSnake();break;
     case 'refresh': closeRefresh();break;
     case 'display': closeDisplay();break;
@@ -1536,6 +1594,189 @@ document.addEventListener('keydown',e=>{
 window.addEventListener('resize',()=>{
   if(document.getElementById('snakeScreen').classList.contains('show')) snakeFit();
 });
+
+/* ========== 世界首富模拟器 ========== */
+const RICH_KEY='soloshow-rich-v1';
+const RICH_CATS=[
+  {name:'房产',items:[
+    {e:'🏢',n:'市中心公寓',p:5e6,i:1e4,g:1.15},
+    {e:'🏡',n:'湖畔别墅',p:3e7,i:6e4,g:1.16},
+    {e:'🏰',n:'山顶豪宅',p:2e8,i:5e5,g:1.17},
+    {e:'🏝️',n:'私人岛屿',p:8e9,i:2.5e7,g:1.18},
+  ]},
+  {name:'豪车',items:[
+    {e:'🏎️',n:'超级跑车',p:8e6,i:1.5e4,g:1.15},
+    {e:'🚗',n:'劳斯莱斯幻影',p:2.5e7,i:5e4,g:1.16},
+    {e:'🔥',n:'布加迪威龙',p:1.2e8,i:3e5,g:1.17},
+    {e:'🚘',n:'限量豪车车队',p:1e9,i:3e6,g:1.18},
+  ]},
+  {name:'飞机',items:[
+    {e:'🛩️',n:'轻型私人飞机',p:5e7,i:1.2e5,g:1.16},
+    {e:'✈️',n:'湾流公务机',p:3e8,i:8e5,g:1.17},
+    {e:'🛫',n:'波音747专机',p:2e9,i:6e6,g:1.18},
+    {e:'🚀',n:'私人火箭',p:2e10,i:8e7,g:1.19},
+  ]},
+  {name:'奢侈品',items:[
+    {e:'⌚',n:'百达翡丽名表',p:2e6,i:3e3,g:1.14},
+    {e:'💎',n:'粉钻项链',p:5e7,i:9e4,g:1.16},
+    {e:'🛥️',n:'超级游艇',p:5e8,i:1.2e6,g:1.17},
+    {e:'🖼️',n:'天价名画',p:3e9,i:9e6,g:1.18},
+  ]},
+  {name:'公司股权',items:[
+    {e:'📱',n:'科技公司股权',p:1e10,i:3e7,g:1.18},
+    {e:'🏦',n:'银行控股',p:5e10,i:2e8,g:1.19},
+    {e:'🛰️',n:'航天集团',p:3e11,i:1.5e9,g:1.2},
+    {e:'🤖',n:'AI 巨头控股',p:2e12,i:1.2e10,g:1.21},
+  ]},
+];
+const RICH_FLAT=[];
+RICH_CATS.forEach(c=>c.items.forEach(it=>RICH_FLAT.push(it)));
+const RICH_BASE_RATE=1e5;   /* 基础收益 10万/秒 */
+let richMoney=1e10;         /* 初始资金 100亿 */
+let richOwned=RICH_FLAT.map(()=>0);
+let richLastTs=0, richRaf=null, richParts=null;
+
+try{
+  const s=JSON.parse(localStorage.getItem(RICH_KEY));
+  if(s&&typeof s.m==='number'){
+    richMoney=s.m;
+    if(Array.isArray(s.o)) s.o.forEach((v,i)=>{ if(i<richOwned.length) richOwned[i]=v; });
+    richLastTs=s.t||0;
+  }
+}catch(e){}
+
+function richSave(){
+  try{ localStorage.setItem(RICH_KEY,JSON.stringify({m:richMoney,o:richOwned,t:Date.now()})); }catch(e){}
+}
+
+/* 大额数字：万 / 千万 / 亿 / 兆 自动切换 */
+function richFmt(n){
+  const neg=n<0?'-':'';
+  n=Math.abs(n);
+  if(n<1e4) return neg+Math.floor(n);
+  if(n<1e7) return neg+(n/1e4).toFixed(2)+'万';
+  if(n<1e8) return neg+(n/1e7).toFixed(2)+'千万';
+  if(n<1e12) return neg+(n/1e8).toFixed(2)+'亿';
+  return neg+(n/1e12).toFixed(2)+'兆';
+}
+/* 第 i 件商品当前价格（买得越多越贵） */
+function richPrice(i){ const it=RICH_FLAT[i]; return it.p*Math.pow(it.g,richOwned[i]); }
+function richRatePerSec(){ return RICH_BASE_RATE+RICH_FLAT.reduce((s,it,i)=>s+richOwned[i]*it.i,0); }
+function richAssetValue(i){ /* 已购累计花费（等比数列求和） */
+  const it=RICH_FLAT[i], k=richOwned[i];
+  return k?it.p*(Math.pow(it.g,k)-1)/(it.g-1):0;
+}
+function richTotalAssets(){ return richMoney+RICH_FLAT.reduce((s,_,i)=>s+richAssetValue(i),0); }
+
+function openRich(){
+  document.getElementById('richScreen').classList.add('show');
+  const now=Date.now();
+  if(richLastTs) richMoney+=richRatePerSec()*Math.min(28800,(now-richLastTs)/1000); /* 离线收益，上限8小时 */
+  richLastTs=now;
+  richRenderShop();
+  richFitParticles();
+  cancelAnimationFrame(richRaf);
+  richRaf=requestAnimationFrame(richLoop);
+}
+function closeRich(){
+  document.getElementById('richScreen').classList.remove('show');
+  cancelAnimationFrame(richRaf);
+  richSave();
+}
+
+function richLoop(){
+  if(!document.getElementById('richScreen').classList.contains('show')) return;
+  const now=Date.now();
+  const dt=Math.min(.5,(now-richLastTs)/1000);
+  richLastTs=now;
+  richMoney+=richRatePerSec()*dt;
+  document.getElementById('richMoney').textContent='¥'+richFmt(richMoney);
+  document.getElementById('richTotal').textContent='¥'+richFmt(richTotalAssets());
+  document.getElementById('richRate').textContent='+'+richFmt(richRatePerSec());
+  /* 买不起的按钮置灰 */
+  document.querySelectorAll('#richShop .rich-buy').forEach(b=>{
+    b.classList.toggle('cant',richMoney<richPrice(+b.dataset.i));
+  });
+  richDrawParticles(now);
+  richRaf=requestAnimationFrame(richLoop);
+}
+
+function richRenderShop(){
+  let html='',idx=0;
+  RICH_CATS.forEach(c=>{
+    html+=`<div class="rich-cat">${c.name}</div>`;
+    c.items.forEach(it=>{
+      const i=idx++;
+      html+=`<div class="rich-item">
+        <div class="rich-emoji">${it.e}</div>
+        <div class="rich-info">
+          <div class="rich-name">${it.n}${richOwned[i]?`<span class="rich-owned">×${richOwned[i]}</span>`:''}</div>
+          <div class="rich-meta">+${richFmt(it.i)}/秒${richOwned[i]?` · 合计 +${richFmt(richOwned[i]*it.i)}/秒`:''}</div>
+        </div>
+        <button class="rich-buy${richMoney<richPrice(i)?' cant':''}" data-i="${i}" onclick="richBuy(${i})">¥${richFmt(richPrice(i))}</button>
+      </div>`;
+    });
+  });
+  document.getElementById('richShop').innerHTML=html;
+}
+
+function richBuy(i){
+  const it=RICH_FLAT[i], price=richPrice(i);
+  if(richMoney<price){
+    richShowToast(`余额不足<br><b>还差 ¥${richFmt(price-richMoney)}</b>`);
+    return;
+  }
+  richMoney-=price;
+  richOwned[i]++;
+  richSave();
+  richRenderShop();
+  richShowToast(`购买成功<br><b>${it.e} ${it.n} ×${richOwned[i]}</b><span>收益 +${richFmt(it.i)}/秒</span>`);
+  const m=document.getElementById('richMoney');
+  m.classList.remove('pulse'); void m.offsetWidth; m.classList.add('pulse');
+}
+
+let richToastTimer=null;
+function richShowToast(html){
+  const t=document.getElementById('richToast');
+  t.innerHTML=html;
+  t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop');
+  clearTimeout(richToastTimer);
+  richToastTimer=setTimeout(()=>t.classList.remove('pop'),1300);
+}
+
+/* 粒子特效：金绿光点上浮闪烁 */
+function richFitParticles(){
+  const cv=document.getElementById('richParticles');
+  const sc=document.getElementById('richScreen');
+  cv.width=sc.clientWidth; cv.height=sc.clientHeight;
+  if(!richParts){
+    richParts=[];
+    for(let i=0;i<38;i++) richParts.push({
+      x:Math.random(),y:Math.random(),
+      r:.8+Math.random()*2,
+      v:.0003+Math.random()*.0009,
+      ph:Math.random()*Math.PI*2,
+      gold:Math.random()<.6,
+    });
+  }
+}
+function richDrawParticles(now){
+  const cv=document.getElementById('richParticles');
+  if(!cv.width) return;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const t=now/1000;
+  richParts.forEach(p=>{
+    p.y-=p.v;
+    if(p.y<-.02){ p.y=1.02; p.x=Math.random(); }
+    const a=.12+.3*(.5+.5*Math.sin(t*2+p.ph));
+    ctx.fillStyle=p.gold?`rgba(255,209,102,${a})`:`rgba(74,222,128,${a})`;
+    ctx.beginPath();
+    ctx.arc(p.x*cv.width+Math.sin(t+p.ph)*8,p.y*cv.height,p.r,0,Math.PI*2);
+    ctx.fill();
+  });
+}
+window.addEventListener('pagehide',richSave);
 
 /* ========== 初始化 ========== */
 renderHzGrid();
