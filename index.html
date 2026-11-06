@@ -618,6 +618,50 @@ body{
 }
 .dpad-btn.mid{font-size:11px;letter-spacing:1px;color:#4ade80;background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.2)}
 
+/* ================= 创始人页面 ================= */
+.founder-hero{
+  display:flex;flex-direction:column;align-items:center;
+  padding:26px 0 22px;position:relative;
+}
+.founder-avatar{
+  width:96px;height:96px;border-radius:30px;
+  display:grid;place-items:center;font-size:52px;
+  background:linear-gradient(145deg,#241d2e,#141019);
+  border:1px solid rgba(255,140,0,.3);
+  box-shadow:0 0 40px rgba(255,140,0,.18),inset 0 1px 0 rgba(255,255,255,.08);
+  animation:founderGlow 3s ease-in-out infinite;
+}
+@keyframes founderGlow{
+  0%,100%{box-shadow:0 0 34px rgba(255,140,0,.14),inset 0 1px 0 rgba(255,255,255,.08)}
+  50%{box-shadow:0 0 54px rgba(255,140,0,.28),inset 0 1px 0 rgba(255,255,255,.08)}
+}
+.founder-crown{
+  position:absolute;top:10px;
+  font-size:20px;transform:rotate(-14deg);
+  filter:drop-shadow(0 0 8px rgba(255,193,7,.6));
+}
+.founder-name{
+  font-size:26px;font-weight:900;letter-spacing:4px;margin-top:18px;
+  background:linear-gradient(135deg,#ffd27a,#ff9d3c);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.founder-badge{
+  display:flex;align-items:center;gap:6px;margin-top:10px;
+  padding:4px 14px;border-radius:20px;
+  font-size:10px;letter-spacing:3px;font-weight:700;
+  color:#ffb066;background:rgba(255,140,0,.1);
+  border:1px solid rgba(255,140,0,.3);
+}
+.founder-quote{
+  margin:20px 0 4px;padding:16px 18px;border-radius:16px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);
+  font-size:12.5px;color:#c4c8d6;line-height:1.9;text-align:center;
+}
+.founder-quote b{color:#ffb066;font-weight:600}
+.founder-sign{
+  text-align:right;font-size:11px;color:#6b7289;margin-top:8px;letter-spacing:2px;
+}
+
 </style>
 </head>
 <body>
@@ -711,6 +755,13 @@ body{
 
       <div class="setting-list">
         <div class="group">
+          <div class="item" onclick="openFounder()">
+            <div class="item-icon orange">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8l4.5 3.5L12 5l4.5 6.5L21 8l-1.5 10h-15L3 8z"/></svg>
+            </div>
+            <div class="item-text">创始人<div class="item-text sub">认识 SoloShow 的创造者</div></div>
+            <div class="item-arrow"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
+          </div>
           <div class="item" onclick="openUsers()">
             <div class="item-icon cyan">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -1045,6 +1096,58 @@ body{
       </div>
     </div>
 
+    <!-- ========== 创始人 ========== -->
+    <div class="level2" id="founderScreen" style="z-index:46">
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeFounder()">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">创始人</div>
+      </div>
+      <div class="level2-content">
+        <div class="founder-hero">
+          <div class="founder-crown">👑</div>
+          <div class="founder-avatar">👩‍💼</div>
+          <div class="founder-name">小 红</div>
+          <div class="founder-badge">★ 创始人 · FOUNDER</div>
+        </div>
+
+        <div class="group-title">创始人信息</div>
+        <div class="group">
+          <div class="item">
+            <div class="item-icon orange"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+            <div class="item-text">创始人姓名</div>
+            <div class="value-txt" style="color:#ffb066;font-weight:600">小红</div>
+          </div>
+          <div class="item">
+            <div class="item-icon purple"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.4 7.2 16.9l.9-5.4L4.2 7.7l5.4-.8z"/></svg></div>
+            <div class="item-text">创立品牌</div>
+            <div class="value-txt">SoloShow</div>
+          </div>
+          <div class="item">
+            <div class="item-icon blue"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10v2h12v-2H6zm0 4v2h8v-2H6z"/></svg></div>
+            <div class="item-text">代表作品</div>
+            <div class="value-txt">SoloShow OS</div>
+          </div>
+          <div class="item">
+            <div class="item-icon green"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></div>
+            <div class="item-text">上线时间</div>
+            <div class="value-txt">2026 年</div>
+          </div>
+        </div>
+
+        <div class="founder-quote">
+          「 愿每一位打开 SoloShow 的人，<br>
+          都能在指尖感受到 <b>科技与浪漫</b> 的交汇。<br>
+          这台小小的手机，承载的是无限的想象。 」
+          <div class="founder-sign">—— 小红 · 2026</div>
+        </div>
+
+        <div style="text-align:center;margin-top:24px;font-size:11px;color:#3a3f58;letter-spacing:3px">SOLOSHOW OS · CREATED BY XIAOHONG</div>
+        <div style="height:50px"></div>
+      </div>
+    </div>
+
     <!-- 底部手势条 -->
     <div class="gesture"></div>
   </div>
@@ -1202,6 +1305,7 @@ function closeRefresh(){
 function topLayer(){
   if(document.getElementById('userSheetMask').classList.contains('show')) return 'sheet';
   if(document.getElementById('userScreen').classList.contains('show')) return 'users';
+  if(document.getElementById('founderScreen').classList.contains('show')) return 'founder';
   if(document.getElementById('snakeScreen').classList.contains('show')) return 'snake';
   if(document.getElementById('refreshScreen').classList.contains('show')) return 'refresh';
   if(document.getElementById('displayScreen').classList.contains('show')) return 'display';
@@ -1213,6 +1317,7 @@ function backTop(){
   switch(topLayer()){
     case 'sheet': closeUserSheet();break;
     case 'users': closeUsers();break;
+    case 'founder': closeFounder();break;
     case 'snake': closeSnake();break;
     case 'refresh': closeRefresh();break;
     case 'display': closeDisplay();break;
@@ -1261,25 +1366,28 @@ function loadUsers(){
     if(raw){
       const s=JSON.parse(raw);
       if(Array.isArray(s.users)&&s.users.length){
-        const activeId=s.users.some(u=>u.id===s.activeId)?s.activeId:s.users[0].id;
-        /* 一次性迁移：为旧数据补加内置管理员「小红」，之后不再重复添加 */
-        if(!s.builtinDone){
-          if(!s.users.some(u=>u.name==='小红'&&u.role==='admin')){
-            s.users.push({id:'u-xiaohong',name:'小红',avatar:'👩‍💼',role:'admin'});
+        /* 一次性迁移 v2：移除早期版本内置的「小红」账户（创始人已改为独立展示页） */
+        if(!s.v2Cleaned){
+          s.users=s.users.filter(u=>u.id!=='u-xiaohong');
+          if(!s.users.length){
+            const now=Date.now();
+            s.users=[{id:'u-'+now,name:'我',avatar:'🧑‍💻',role:'admin'},
+                     {id:'u-'+now+'-b',name:'访客账户',avatar:'👤',role:'guest'}];
           }
-          s.builtinDone=true;
+          if(!s.users.some(u=>u.id===s.activeId)) s.activeId=s.users[0].id;
+          s.v2Cleaned=true;
         }
-        return {users:s.users,activeId,builtinDone:s.builtinDone};
+        const activeId=s.users.some(u=>u.id===s.activeId)?s.activeId:s.users[0].id;
+        return {users:s.users,activeId,v2Cleaned:true};
       }
     }
   }catch(e){}
   const now=Date.now();
   const users=[
     {id:'u-'+now,name:'我',avatar:'🧑‍💻',role:'admin'},
-    {id:'u-xiaohong',name:'小红',avatar:'👩‍💼',role:'admin'},
     {id:'u-'+now+'-b',name:'访客账户',avatar:'👤',role:'guest'}
   ];
-  return {users,activeId:users[0].id,builtinDone:true};
+  return {users,activeId:users[0].id,v2Cleaned:true};
 }
 let userState=loadUsers();
 
@@ -1497,6 +1605,14 @@ function escapeHtml(s){
 document.getElementById('userSheetMask').addEventListener('click',function(e){
   if(e.target===this) closeUserSheet();
 });
+
+/* ========== 创始人页面 ========== */
+function openFounder(){
+  document.getElementById('founderScreen').classList.add('show');
+}
+function closeFounder(){
+  document.getElementById('founderScreen').classList.remove('show');
+}
 
 /* ========== 贪吃蛇游戏 ========== */
 const SNAKE_KEY='soloshow-snake-hi';
