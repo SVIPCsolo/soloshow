@@ -363,6 +363,79 @@ body{
 .level2-content{flex:1;overflow-y:auto;padding:0 18px}
 .level2-content::-webkit-scrollbar{width:0}
 
+/* ================= 全站群聊 ================= */
+.chat-name{
+  margin-left:auto;padding:6px 12px;border-radius:20px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  color:#ffb066;font-size:12px;font-weight:600;letter-spacing:.5px;
+  max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.chat-name:active{background:rgba(255,255,255,.15)}
+.chat-status{
+  font-size:10px;color:#6b7289;letter-spacing:1px;
+  padding:0 20px 8px;display:flex;align-items:center;gap:6px;
+}
+.chat-status i{
+  width:6px;height:6px;border-radius:50%;background:#ffb020;
+  display:inline-block;animation:chatBlink 1.2s ease-in-out infinite;
+}
+.chat-status.on i{background:#4ade80;animation:none;box-shadow:0 0 8px #4ade80}
+.chat-status.err i{background:#ff5a5a;animation:none}
+@keyframes chatBlink{0%,100%{opacity:.35}50%{opacity:1}}
+.chat-list{
+  flex:1;overflow-y:auto;padding:4px 16px 12px;
+  display:flex;flex-direction:column;gap:12px;
+  -webkit-overflow-scrolling:touch;
+}
+.chat-list::-webkit-scrollbar{width:0}
+.chat-empty{
+  margin:auto;text-align:center;color:#545a6e;font-size:12px;line-height:2;
+}
+.chat-empty b{display:block;font-size:34px;margin-bottom:8px}
+.chat-item{display:flex;flex-direction:column;align-items:flex-start;max-width:82%}
+.chat-item.me{align-self:flex-end;align-items:flex-end}
+.chat-meta{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;color:#6b7289;margin:0 4px 4px;
+}
+.chat-who{color:#9aa3bb;font-weight:600}
+.chat-item.me .chat-who{color:#ffb066}
+.chat-bubble{
+  padding:9px 13px;border-radius:14px 14px 14px 4px;
+  background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.06);
+  color:#e8eaf2;font-size:14px;line-height:1.55;
+  word-break:break-word;white-space:pre-wrap;
+  animation:chatPop .22s ease;
+}
+.chat-item.me .chat-bubble{
+  border-radius:14px 14px 4px 14px;
+  background:linear-gradient(135deg,rgba(255,160,50,.9),rgba(255,120,20,.85));
+  border-color:rgba(255,180,80,.5);color:#1a1206;font-weight:500;
+}
+@keyframes chatPop{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+.chat-input-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px calc(14px + env(safe-area-inset-bottom));
+  border-top:1px solid rgba(255,255,255,.06);
+  background:rgba(10,12,18,.9);
+}
+.chat-input-bar input{
+  flex:1;min-width:0;padding:12px 16px;border-radius:22px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);
+  color:#e8eaf2;font-size:14px;outline:none;
+}
+.chat-input-bar input:focus{border-color:rgba(255,176,102,.55);background:rgba(255,255,255,.1)}
+.chat-input-bar input::placeholder{color:#5c6379}
+.chat-send{
+  padding:12px 18px;border-radius:22px;border:none;
+  background:linear-gradient(135deg,#ffb25a,#ff8a1f);
+  color:#1a1206;font-size:14px;font-weight:800;
+  box-shadow:0 4px 14px rgba(255,140,30,.3);
+  flex-shrink:0;
+}
+.chat-send:active{transform:scale(.95)}
+.chat-send:disabled{opacity:.45}
+
 /* 右侧值 */
 .value-txt{font-size:12px;color:#6b7289;margin-right:4px;max-width:50%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -827,11 +900,18 @@ body{
           </div>
           <div class="app-label">超级小红</div>
         </div>
+
+        <div class="app" onclick="openChat()">
+          <div class="app-icon">
+            <span style="font-size:30px;filter:drop-shadow(0 0 6px rgba(77,166,255,.65))">💬</span>
+          </div>
+          <div class="app-label">全站群聊</div>
+        </div>
       </div>
 
       <div class="dock">
         <div class="app" style="gap:6px"><div class="app-icon" style="background:linear-gradient(145deg,#1a1d2a,#12141c)"><svg viewBox="0 0 24 24" fill="#4ade80"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.58l2.2-2.21c.28-.27.36-.66.25-1.01C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg></div></div>
-        <div class="app" style="gap:6px"><div class="app-icon" style="background:linear-gradient(145deg,#1a1d2a,#12141c)"><svg viewBox="0 0 24 24" fill="#4da6ff"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div></div>
+        <div class="app" style="gap:6px" onclick="openChat()"><div class="app-icon" style="background:linear-gradient(145deg,#1a1d2a,#12141c)"><svg viewBox="0 0 24 24" fill="#4da6ff"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div></div>
         <div class="app" style="gap:6px"><div class="app-icon" style="background:linear-gradient(145deg,#1a1d2a,#12141c)"><svg viewBox="0 0 24 24" fill="#4ade80"><path d="M12 2C6.48 2 2 6.18 2 11.3c0 2.86 1.47 5.44 3.78 7.14L5 22l3.42-1.88c1.1.3 2.27.46 3.47.46 5.52 0 10-4.18 10-9.3S17.52 2 12 2z"/></svg></div></div>
         <div class="app" style="gap:6px"><div class="app-icon" style="background:linear-gradient(145deg,#1a1d2a,#12141c)"><svg viewBox="0 0 24 24" fill="#ffb066"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div></div>
       </div>
@@ -1274,6 +1354,25 @@ body{
       </div>
     </div>
 
+    <!-- ========== 全站群聊 ========== -->
+    <div class="level2" id="chatScreen" style="z-index:44">
+      <div class="setting-header">
+        <div class="back-btn" onclick="closeChat()" aria-label="返回">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        </div>
+        <div class="setting-title">全站群聊</div>
+        <button class="chat-name" id="chatName" onclick="chatRename()">游客</button>
+      </div>
+      <div class="chat-status" id="chatStatus"><i></i><span>连接中…</span></div>
+      <div class="chat-list" id="chatList">
+        <div class="chat-empty" id="chatEmpty"><b>💬</b>还没有人说话<br>来打个招呼吧（消息全站公开可见）</div>
+      </div>
+      <div class="chat-input-bar">
+        <input id="chatInput" placeholder="说点什么…" maxlength="200" autocomplete="off">
+        <button class="chat-send" id="chatSend" onclick="chatSend()">发送</button>
+      </div>
+    </div>
+
     <!-- ========== 创始人 ========== -->
     <div class="level2" id="founderScreen" style="z-index:46">
       <div class="setting-header">
@@ -1503,6 +1602,7 @@ function topLayer(){
   if(document.getElementById('founderScreen').classList.contains('show')) return 'founder';
   if(document.getElementById('gomokuScreen').classList.contains('show')) return 'gomoku';
   if(document.getElementById('marioScreen').classList.contains('show')) return 'mario';
+  if(document.getElementById('chatScreen').classList.contains('show')) return 'chat';
   if(document.getElementById('lifeScreen').classList.contains('show')) return 'life';
   if(document.getElementById('richScreen').classList.contains('show')) return 'rich';
   if(document.getElementById('snakeScreen').classList.contains('show')) return 'snake';
@@ -1518,6 +1618,7 @@ function backTop(){
     case 'founder': closeFounder();break;
     case 'gomoku': closeGomoku();break;
     case 'mario': closeMario();break;
+    case 'chat': closeChat();break;
     case 'life': closeLife();break;
     case 'rich': closeRich();break;
     case 'snake': closeSnake();break;
@@ -2841,6 +2942,179 @@ document.addEventListener('keyup',e=>{
 });
 window.addEventListener('resize',()=>{
   if(document.getElementById('marioScreen').classList.contains('show')){ marioResize(); marioDraw(); }
+});
+
+/* ========== 全站群聊（ntfy.sh 公共中转，免登录 · 实时） ========== */
+const CHAT_TOPIC='soloshow-chat-public-2026';
+const CHAT_API='https://ntfy.sh/'+CHAT_TOPIC;
+const CHAT_NAME_KEY='soloshow-chat-name';
+let chatES=null, chatPollTimer=0, chatSeenIds=new Set(), chatLastSec=0, chatReady=false, chatName='';
+
+function chatInitName(){
+  try{ chatName=localStorage.getItem(CHAT_NAME_KEY)||''; }catch(e){ chatName=''; }
+  if(!chatName){
+    chatName='游客'+Math.floor(1000+Math.random()*9000);
+    try{ localStorage.setItem(CHAT_NAME_KEY,chatName); }catch(e){}
+  }
+  document.getElementById('chatName').textContent=chatName;
+}
+function chatRename(){
+  const v=prompt('输入你的昵称（最多 12 个字）',chatName);
+  if(v===null) return;
+  const n=v.trim().slice(0,12);
+  if(!n) return;
+  chatName=n;
+  try{ localStorage.setItem(CHAT_NAME_KEY,chatName); }catch(e){}
+  document.getElementById('chatName').textContent=chatName;
+}
+function chatSetStatus(txt,kind){
+  const el=document.getElementById('chatStatus');
+  el.className='chat-status'+(kind?' '+kind:'');
+  el.querySelector('span').textContent=txt;
+}
+function chatTime(ts){
+  const d=new Date(ts||Date.now());
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function chatScroll(){
+  const list=document.getElementById('chatList');
+  requestAnimationFrame(()=>{ list.scrollTop=list.scrollHeight; });
+}
+function chatAddMsg(o){
+  const text=(o.m||'').toString().slice(0,200);
+  if(!text) return;
+  const id=o.id||('h'+o.t+'_'+text.length);
+  if(chatSeenIds.has(id)) return;
+  chatSeenIds.add(id);
+  if(chatSeenIds.size>600) chatSeenIds=new Set(Array.from(chatSeenIds).slice(-300));
+  const empty=document.getElementById('chatEmpty');
+  if(empty) empty.remove();
+  const item=document.createElement('div');
+  item.className='chat-item'+(o.self?' me':'');
+  const meta=document.createElement('div');
+  meta.className='chat-meta';
+  const who=document.createElement('span');
+  who.className='chat-who';
+  who.textContent=o.n||'匿名';
+  const tm=document.createElement('span');
+  tm.textContent=chatTime(o.t);
+  meta.appendChild(who); meta.appendChild(tm);
+  const bubble=document.createElement('div');
+  bubble.className='chat-bubble';
+  bubble.textContent=text;
+  item.appendChild(meta); item.appendChild(bubble);
+  document.getElementById('chatList').appendChild(item);
+  chatScroll();
+}
+function chatParse(raw){
+  /* ntfy 消息体是我们自己的 JSON：{n,m,i,t} */
+  let p;
+  try{ p=typeof raw==='string'?JSON.parse(raw):raw; }catch(e){ return null; }
+  if(!p||typeof p!=='object'||typeof p.m!=='string'||!p.m.trim()) return null;
+  return {n:(p.n||'匿名').toString().slice(0,12),m:p.m,i:p.i,t:p.t||Date.now()};
+}
+async function chatLoadHistory(){
+  try{
+    const r=await fetch(CHAT_API+'/json?poll=1&since=12h',{cache:'no-store'});
+    if(!r.ok) return;
+    const txt=await r.text();
+    const arr=[];
+    txt.split('\n').forEach(line=>{
+      if(!line.trim()) return;
+      try{
+        const j=JSON.parse(line);
+        if(j.event!=='message') return;
+        const m=chatParse(j.message);
+        if(m){ if((j.time||0)>chatLastSec) chatLastSec=j.time||0; arr.push({...m,id:m.i||j.id}); }
+      }catch(e){}
+    });
+    arr.sort((a,b)=>(a.t||0)-(b.t||0)).forEach(m=>chatAddMsg(m));
+    if(arr.length) chatScroll();
+  }catch(e){}
+}
+function chatStartPolling(){
+  if(chatPollTimer) return;
+  chatPollTimer=setInterval(async()=>{
+    try{
+      const since=chatLastSec?chatLastSec:Math.floor(Date.now()/1000)-60;
+      const r=await fetch(CHAT_API+'/json?poll=1&since='+since,{cache:'no-store'});
+      if(!r.ok) throw 0;
+      const txt=await r.text();
+      txt.split('\n').forEach(line=>{
+        if(!line.trim()) return;
+        try{
+          const j=JSON.parse(line);
+          if(j.event!=='message') return;
+          if((j.time||0)>chatLastSec) chatLastSec=j.time||0;
+          const m=chatParse(j.message);
+          if(m) chatAddMsg({...m,id:m.i||j.id});
+        }catch(e){}
+      });
+      if(!chatReady){ chatReady=true; chatSetStatus('在线 · 实时','on'); }
+    }catch(e){
+      chatSetStatus('网络不佳，重试中…','err');
+    }
+  },4000);
+}
+function chatConnect(){
+  if(chatES||chatPollTimer) return;
+  try{
+    chatES=new EventSource(CHAT_API+'/sse?since=10m');
+    chatES.onopen=()=>{ chatReady=true; chatSetStatus('在线 · 实时','on'); };
+    chatES.onmessage=ev=>{
+      try{
+        const j=JSON.parse(ev.data);
+        if(j.event!=='message') return;
+        const m=chatParse(j.message);
+        if(m) chatAddMsg({...m,id:m.i||j.id});
+      }catch(e){}
+    };
+    chatES.onerror=()=>{
+      chatSetStatus('重连中…','');
+      setTimeout(()=>{
+        if(!chatReady) chatStartPolling();
+      },4000);
+    };
+  }catch(e){ chatStartPolling(); }
+}
+async function chatSend(){
+  const inp=document.getElementById('chatInput');
+  const btn=document.getElementById('chatSend');
+  const text=inp.value.trim().slice(0,200);
+  if(!text) return;
+  const payload={n:chatName,m:text,i:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),t:Date.now()};
+  inp.value='';
+  chatAddMsg({n:payload.n,m:payload.m,t:payload.t,id:payload.i,self:true});
+  btn.disabled=true;
+  try{
+    const r=await fetch(CHAT_API,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    chatSetStatus('在线 · 实时','on');
+  }catch(e){
+    chatSetStatus('发送失败，请检查网络后重试','err');
+  }finally{
+    btn.disabled=false;
+    inp.focus();
+  }
+}
+function openChat(){
+  document.getElementById('chatScreen').classList.add('show');
+  chatInitName();
+  chatLoadHistory().then(chatScroll);
+  chatConnect();
+}
+function closeChat(){
+  document.getElementById('chatScreen').classList.remove('show');
+}
+document.getElementById('chatInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ e.preventDefault(); chatSend(); }
+});
+document.getElementById('chatInput').addEventListener('focus',()=>{
+  setTimeout(chatScroll,300);
 });
 
 /* ========== 初始化 ========== */
